@@ -63,9 +63,18 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  *       group.map((msg) => {
  *         const opts = { caption: msg.caption };
  *         switch (true) {
- *           case "photo" in msg: return InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, opts);
- *           case "video" in msg: return InputMediaBuilder.video(msg.video!.file_id, opts);
- *           case "document" in msg: return InputMediaBuilder.document(msg.document!.file_id, opts);
+ *           case "photo" in msg: {
+ *             const id = msg.photo?.at(-1)?.file_id;
+ *             return InputMediaBuilder.photo(id, opts);
+ *           }
+ *           case "video" in msg: {
+ *             const id = msg.video?.file_id;
+ *             return InputMediaBuilder.video(id, opts);
+ *           }
+ *           case "document" in msg: {
+ *             const id = msg.document?.file_id;
+ *             return InputMediaBuilder.document(id, opts);
+ *           }
  *         }
  *       }).filter(Boolean),
  *     );
