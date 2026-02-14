@@ -39,15 +39,13 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  * API methods whose responses may contain messages with `media_group_id`.
  */
 const MEDIA_GROUP_METHODS = [
-    "sendPhoto",
-    "sendVideo",
-    "sendAnimation",
-    "sendAudio",
-    "sendDocument",
     "sendMediaGroup",
-    "copyMessages",
+    "copyMessage",
     "forwardMessage",
-    "forwardMessages",
+    "editMessageMedia",
+    "editMessageCaption",
+    "editMessageText",
+    "editMessageReplyMarkup",
 ] as const;
 
 /**
@@ -61,14 +59,29 @@ async function storeMessage(
     const mediaGroupId = message.media_group_id;
     if (!mediaGroupId) return;
 
-    const existing = (await adapter.read(mediaGroupId)) ?? [];
+    let existing: Message[] = [];
+    try {
+        existing = (await adapter.read(mediaGroupId)) ?? [];
+    } catch {
+        return;
+    }
 
-    if (existing.some((m) => m.message_id === message.message_id && m.chat.id === message.chat.id)) {
+    if (
+        existing.some(
+            (m) =>
+                m.message_id === message.message_id &&
+                m.chat.id === message.chat.id,
+        )
+    ) {
         return;
     }
 
     existing.push(message);
-    await adapter.write(mediaGroupId, existing);
+    try {
+        await adapter.write(mediaGroupId, existing);
+    } catch {
+        // Silently ignore write failures
+    }
 }
 
 /**
@@ -185,9 +198,10 @@ export function mediaGroups(
             )
         ) {
             const messages = extractMessages(method, res.result);
-            for (const message of messages) {
-                await storeMessage(adapter, message);
-            }
+            const storagePromises = messages.map((message) =>
+                storeMessage(adapter, message)
+            );
+            await Promise.allSettled(storagePromises);
         }
         return res;
     };
@@ -204,9 +218,10 @@ export function mediaGroups(
 
     // Hydrate context with mediaGroups namespace
     composer.use(async (ctx, next) => {
+        const msg = ctx.msg ?? ctx.message;
+
         ctx.mediaGroups = {
             getMediaGroup: async () => {
-                const msg = ctx.msg ?? ctx.message;
                 const mediaGroupId = msg?.media_group_id;
                 if (!mediaGroupId) return undefined;
                 return await getMediaGroup(mediaGroupId);
@@ -214,15 +229,13 @@ export function mediaGroups(
         };
 
         // Store message from incoming update if it has media_group_id
-        const msg = ctx.msg ?? ctx.message;
         if (msg?.media_group_id) {
             await storeMessage(adapter, msg);
         }
 
         // Hydrate reply_to_message if present
-        if (msg) {
-            const replyToMessage = (msg as Message.CommonMessage)
-                .reply_to_message;
+        if (msg && "reply_to_message" in msg) {
+            const replyToMessage = msg.reply_to_message;
             if (replyToMessage) {
                 hydrateMessage(replyToMessage, adapter);
 

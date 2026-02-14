@@ -29,6 +29,7 @@ npm install @grammyjs/media-groups
 ### Deno
 
 ```typescript
+// Update the URL below once the module is published on deno.land
 import { mediaGroups, type MediaGroupsFlavor } from "https://deno.land/x/grammy_media_groups/mod.ts";
 ```
 
