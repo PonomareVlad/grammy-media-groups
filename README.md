@@ -59,17 +59,17 @@ bot.on("message", async (ctx) => {
     }
 });
 
-// Use with reply_to_message — e.g. a /forward command
-bot.command("forward", async (ctx) => {
-    const reply = ctx.msg?.reply_to_message;
-    if (reply?.getMediaGroup) {
-        const group = await reply.getMediaGroup();
-        if (group) {
-            // Forward every message in the album
-            for (const msg of group) {
-                await ctx.api.forwardMessage(ctx.chat.id, msg.chat.id, msg.message_id);
-            }
-        }
+// Reply to an album message with /album to resend the full media group
+bot.command("album", async (ctx) => {
+    const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
+    if (group) {
+        await ctx.replyWithMediaGroup(
+            group.map((msg) => ({
+                type: "photo",
+                media: msg.photo!.at(-1)!.file_id,
+                ...(msg.caption ? { caption: msg.caption } : {}),
+            })),
+        );
     }
 });
 

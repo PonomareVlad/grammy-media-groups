@@ -47,10 +47,16 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  * const messages = await mg.getMediaGroup("some-media-group-id");
  *
  * // In a command handler replying to a media group message
- * bot.command("forward", async (ctx) => {
- *   const group = await ctx.getMediaGroup();
+ * bot.command("album", async (ctx) => {
+ *   const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
  *   if (group) {
- *     // forward all messages in the group
+ *     await ctx.replyWithMediaGroup(
+ *       group.map((msg) => ({
+ *         type: "photo",
+ *         media: msg.photo!.at(-1)!.file_id,
+ *         ...(msg.caption ? { caption: msg.caption } : {}),
+ *       })),
+ *     );
  *   }
  * });
  * ```
