@@ -5,9 +5,9 @@ import {
     type Transformer,
 } from "./deps.deno.ts";
 import type { Message } from "./deps.deno.ts";
-import { extractMessages, MEDIA_GROUP_METHODS, storeMessage } from "./storage.ts";
+import { extractMessages, MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 
-export { extractMessages, MEDIA_GROUP_METHODS, storeMessage } from "./storage.ts";
+export { extractMessages, MEDIA_GROUP_METHODS, storeMessage, storeMessages } from "./storage.ts";
 
 /**
  * Flavor for context that adds media group methods.
@@ -84,9 +84,7 @@ export function mediaGroups(
         const res = await prev(method, payload, signal);
         if (res.ok && MEDIA_GROUP_METHODS.includes(method)) {
             const messages = extractMessages(method, res.result);
-            for (const message of messages) {
-                await storeMessage(adapter, message);
-            }
+            await storeMessages(adapter, messages);
         }
         return res;
     };
@@ -111,9 +109,11 @@ export function mediaGroups(
             return await getMediaGroup(mediaGroupId);
         };
 
-        // Store message from incoming update if it has media_group_id
+        // Collect messages to store in batch
+        const toStore: Message[] = [];
+
         if (msg?.media_group_id) {
-            await storeMessage(adapter, msg);
+            toStore.push(msg);
         }
 
         // Hydrate reply_to_message with getMediaGroup if present
@@ -121,13 +121,17 @@ export function mediaGroups(
             const replyToMessage = msg.reply_to_message;
 
             if (replyToMessage.media_group_id) {
-                await storeMessage(adapter, replyToMessage);
+                toStore.push(replyToMessage);
 
                 Object.defineProperty(replyToMessage, "getMediaGroup", {
                     value: () => getMediaGroup(replyToMessage.media_group_id!),
                     enumerable: false,
                 });
             }
+        }
+
+        if (toStore.length > 0) {
+            await storeMessages(adapter, toStore);
         }
 
         return next();

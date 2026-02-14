@@ -4,6 +4,7 @@ import {
     extractMessages,
     MEDIA_GROUP_METHODS,
     storeMessage,
+    storeMessages,
 } from "./storage.ts";
 
 /** Simple in-memory StorageAdapter for testing. */
@@ -130,4 +131,42 @@ Deno.test("MEDIA_GROUP_METHODS contains expected methods", () => {
         "editMessageReplyMarkup",
     ];
     assertEquals(MEDIA_GROUP_METHODS, expected);
+});
+
+// --- storeMessages (batch) ---
+
+Deno.test("storeMessages stores multiple messages in a single batch", async () => {
+    const adapter = createMemoryAdapter();
+    await storeMessages(adapter, [
+        msg(1, 100, "g1"),
+        msg(2, 100, "g1"),
+        msg(3, 100, "g1"),
+    ]);
+    const stored = await adapter.read("g1");
+    assertEquals(stored?.length, 3);
+});
+
+Deno.test("storeMessages skips messages without media_group_id", async () => {
+    const adapter = createMemoryAdapter();
+    await storeMessages(adapter, [msg(1, 100), msg(2, 100, "g1")]);
+    assertEquals(await adapter.read("g1"), [msg(2, 100, "g1")]);
+});
+
+Deno.test("storeMessages replaces existing messages in batch", async () => {
+    const adapter = createMemoryAdapter();
+    await storeMessage(adapter, msg(1, 100, "g1", { text: "old" }));
+    await storeMessages(adapter, [
+        msg(1, 100, "g1", { text: "new" }),
+        msg(2, 100, "g1"),
+    ]);
+    const stored = await adapter.read("g1");
+    assertEquals(stored?.length, 2);
+    assertEquals((stored?.[0] as unknown as Record<string, unknown>).text, "new");
+    assertEquals(stored?.[1].message_id, 2);
+});
+
+Deno.test("storeMessages handles empty array", async () => {
+    const adapter = createMemoryAdapter();
+    await storeMessages(adapter, []);
+    assertEquals(await adapter.read("g1"), undefined);
 });
