@@ -1,8 +1,8 @@
 {
-    "name": "@grammyjs/plugin-template",
+    "name": "@grammyjs/media-groups",
     "version": "1.0.0",
-    "description": "A Simple Plugin Template For grammY",
-    "homepage": "https://grammy.dev/plugins/MYPLUGIN",
+    "description": "Media Groups Storage Plugin for grammY",
+    "homepage": "https://github.com/PonomareVlad/grammy-media-groups-storage",
     "main": "./out/mod.js",
     "type": "commonjs",
     "scripts": {
@@ -10,7 +10,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Amir-Zouerami/plugin-template.git"
+        "url": "git+https://github.com/PonomareVlad/grammy-media-groups-storage.git"
     },
     "exports": {
         ".": "./out/mod.js"
@@ -18,20 +18,22 @@
     "files": [
         "out/"
     ],
-    "author": "Amir Zouerami",
+    "author": "PonomareVlad",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/Amir-Zouerami/plugin-template/issues"
+        "url": "https://github.com/PonomareVlad/grammy-media-groups-storage/issues"
     },
     "peerDependencies": {
-        "grammy": "^1.5.1"
+        "grammy": "^1.40.0"
     },
     "devDependencies": {
-        "deno2node": "~1.0.0"
+        "deno2node": "^1.16.0"
     },
     "keywords": [
         "grammY",
         "Telegram bot framework",
-        "plugin"
+        "plugin",
+        "media group",
+        "album"
     ]
 }
