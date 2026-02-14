@@ -66,7 +66,10 @@ bot.command("album", async (ctx) => {
         await ctx.replyWithMediaGroup(
             group
                 .map((msg) => {
-                    const opts = { caption: msg.caption };
+                    const opts = {
+                        caption: msg.caption,
+                        caption_entities: msg.caption_entities,
+                    };
                     switch (true) {
                         case "photo" in msg: {
                             const id = msg.photo?.at(-1)?.file_id;
