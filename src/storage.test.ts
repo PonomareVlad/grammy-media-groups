@@ -3,7 +3,6 @@ import type { Message, StorageAdapter } from "./deps.deno.ts";
 import {
     extractMessages,
     MEDIA_GROUP_METHODS,
-    storeMessage,
     storeMessages,
 } from "./storage.ts";
 
@@ -39,45 +38,45 @@ function msg(
     } as unknown as Message;
 }
 
-// --- storeMessage ---
+// --- storeMessages ---
 
-Deno.test("storeMessage skips messages without media_group_id", async () => {
+Deno.test("storeMessages skips messages without media_group_id", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100));
+    await storeMessages(adapter, [msg(1, 100)]);
     assertEquals(await adapter.read("any"), undefined);
 });
 
-Deno.test("storeMessage stores a new message", async () => {
+Deno.test("storeMessages stores a new message", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100, "g1"));
+    await storeMessages(adapter, [msg(1, 100, "g1")]);
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 1);
     assertEquals(stored?.[0].message_id, 1);
 });
 
-Deno.test("storeMessage appends different messages to the same group", async () => {
+Deno.test("storeMessages appends different messages to the same group", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100, "g1"));
-    await storeMessage(adapter, msg(2, 100, "g1"));
+    await storeMessages(adapter, [msg(1, 100, "g1")]);
+    await storeMessages(adapter, [msg(2, 100, "g1")]);
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 2);
     assertEquals(stored?.[0].message_id, 1);
     assertEquals(stored?.[1].message_id, 2);
 });
 
-Deno.test("storeMessage replaces an existing message (update-in-place)", async () => {
+Deno.test("storeMessages replaces an existing message (update-in-place)", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100, "g1", { text: "old" }));
-    await storeMessage(adapter, msg(1, 100, "g1", { text: "new" }));
+    await storeMessages(adapter, [msg(1, 100, "g1", { text: "old" })]);
+    await storeMessages(adapter, [msg(1, 100, "g1", { text: "new" })]);
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 1);
     assertEquals((stored?.[0] as unknown as Record<string, unknown>).text, "new");
 });
 
-Deno.test("storeMessage treats same message_id in different chats as distinct", async () => {
+Deno.test("storeMessages treats same message_id in different chats as distinct", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100, "g1"));
-    await storeMessage(adapter, msg(1, 200, "g1"));
+    await storeMessages(adapter, [msg(1, 100, "g1")]);
+    await storeMessages(adapter, [msg(1, 200, "g1")]);
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 2);
 });
@@ -152,7 +151,7 @@ Deno.test("storeMessages skips messages without media_group_id", async () => {
 
 Deno.test("storeMessages replaces existing messages in batch", async () => {
     const adapter = createMemoryAdapter();
-    await storeMessage(adapter, msg(1, 100, "g1", { text: "old" }));
+    await storeMessages(adapter, [msg(1, 100, "g1", { text: "old" })]);
     await storeMessages(adapter, [
         msg(1, 100, "g1", { text: "new" }),
         msg(2, 100, "g1"),

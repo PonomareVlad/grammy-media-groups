@@ -7,7 +7,7 @@ import {
 import type { Message } from "./deps.deno.ts";
 import { extractMessages, MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 
-export { extractMessages, MEDIA_GROUP_METHODS, storeMessage, storeMessages } from "./storage.ts";
+export { extractMessages, MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 
 /**
  * Flavor for context that adds media group methods.

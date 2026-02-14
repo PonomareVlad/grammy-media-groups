@@ -12,36 +12,10 @@ export const MEDIA_GROUP_METHODS: string[] = [
 ];
 
 /**
- * Stores a message into the media group storage, appending it to the
- * existing array or replacing an existing entry with the same message.
- */
-export async function storeMessage(
-    adapter: StorageAdapter<Message[]>,
-    message: Message,
-): Promise<void> {
-    const mediaGroupId = message.media_group_id;
-    if (!mediaGroupId) return;
-
-    const existing = (await adapter.read(mediaGroupId)) ?? [];
-
-    const index = existing.findIndex(
-        (m) =>
-            m.message_id === message.message_id &&
-            m.chat.id === message.chat.id,
-    );
-
-    if (index >= 0) {
-        existing[index] = message;
-    } else {
-        existing.push(message);
-    }
-
-    await adapter.write(mediaGroupId, existing);
-}
-
-/**
- * Stores multiple messages in batch, grouped by `media_group_id`.
+ * Stores messages in batch, grouped by `media_group_id`.
  * Performs one read and one write per group instead of per message.
+ * Messages without `media_group_id` are skipped.
+ * Existing entries with the same `(message_id, chat.id)` are replaced in-place.
  */
 export async function storeMessages(
     adapter: StorageAdapter<Message[]>,
