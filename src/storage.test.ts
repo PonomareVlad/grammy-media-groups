@@ -1,11 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { MemorySessionStorage } from "./deps.deno.ts";
 import type { Message } from "./deps.deno.ts";
-import {
-    extractMessages,
-    MEDIA_GROUP_METHODS,
-    storeMessages,
-} from "./storage.ts";
+import { MemorySessionStorage } from "./deps.deno.ts";
+import { extractMessages, MEDIA_GROUP_METHODS, storeMessages, } from "./storage.ts";
 
 /** Creates a minimal Message-like object for testing. */
 function msg(

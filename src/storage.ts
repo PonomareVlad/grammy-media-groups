@@ -25,8 +25,9 @@ export async function storeMessages(
     for (const message of messages) {
         const { media_group_id } = message;
         if (!media_group_id) continue;
-        const group = (groups[media_group_id] ??=
-            (await adapter.read(media_group_id)) ?? []);
+        const group =
+            (groups[media_group_id] ??= (await adapter.read(media_group_id)) ??
+                []);
         const index = group.findIndex(
             (m) =>
                 m.message_id === message.message_id &&

@@ -1,3 +1,4 @@
+import type { Message } from "./deps.deno.ts";
 import {
     Composer,
     Context,
@@ -5,7 +6,6 @@ import {
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
-import type { Message } from "./deps.deno.ts";
 import {
     extractMessages,
     MEDIA_GROUP_METHODS,

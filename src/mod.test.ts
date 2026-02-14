@@ -1,12 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import {
-    Api,
-    Context,
-    MemorySessionStorage,
-    type UserFromGetMe,
-} from "./deps.deno.ts";
 import type { Message } from "./deps.deno.ts";
-import { type MediaGroupsFlavor, mediaGroups } from "./mod.ts";
+import { Api, Context, MemorySessionStorage, type UserFromGetMe, } from "./deps.deno.ts";
+import { mediaGroups, type MediaGroupsFlavor } from "./mod.ts";
 
 /** Creates a minimal Message-like object for testing. */
 function msg(
