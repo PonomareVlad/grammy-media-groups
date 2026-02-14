@@ -33,7 +33,7 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  *
  * @example
  * ```typescript
- * import { Bot, Context } from "grammy";
+ * import { Bot, Context, InputMediaBuilder } from "grammy";
  * import { type MediaGroupsFlavor, mediaGroups } from "@grammyjs/media-groups";
  *
  * type MyContext = Context & MediaGroupsFlavor;
@@ -52,11 +52,11 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  *   const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
  *   if (group) {
  *     await ctx.replyWithMediaGroup(
- *       group.map((msg) => ({
- *         type: "photo",
- *         media: msg.photo!.at(-1)!.file_id,
- *         ...(msg.caption ? { caption: msg.caption } : {}),
- *       })),
+ *       group.map((msg) =>
+ *         InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, {
+ *           caption: msg.caption,
+ *         }),
+ *       ),
  *     );
  *   }
  * });

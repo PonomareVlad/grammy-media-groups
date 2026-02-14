@@ -37,7 +37,7 @@ import { mediaGroups, type MediaGroupsFlavor } from "https://deno.land/x/grammy_
 ## Usage
 
 ```typescript
-import { Bot, Context } from "grammy";
+import { Bot, Context, InputMediaBuilder } from "grammy";
 import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
@@ -61,11 +61,11 @@ bot.command("album", async (ctx) => {
     const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
     if (group) {
         await ctx.replyWithMediaGroup(
-            group.map((msg) => ({
-                type: "photo",
-                media: msg.photo!.at(-1)!.file_id,
-                ...(msg.caption ? { caption: msg.caption } : {}),
-            })),
+            group.map((msg) =>
+                InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, {
+                    caption: msg.caption,
+                }),
+            ),
         );
     }
 });
