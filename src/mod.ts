@@ -170,16 +170,6 @@ export function mediaGroups(
     const composer = new Composer<MediaGroupsContext>();
     const getMediaGroup = createGetMediaGroup(adapter);
 
-    // Install transformer to capture outgoing API responses
-    let transformerInstalled = false;
-    composer.use((ctx, next) => {
-        if (!transformerInstalled) {
-            ctx.api.config.use(mediaGroupTransformer);
-            transformerInstalled = true;
-        }
-        return next();
-    });
-
     // deno-lint-ignore no-explicit-any
     const mediaGroupTransformer: Transformer<any> = async (
         prev,
@@ -201,6 +191,16 @@ export function mediaGroups(
         }
         return res;
     };
+
+    // Install transformer to capture outgoing API responses (once per API instance)
+    const installedApis = new WeakSet<object>();
+    composer.use((ctx, next) => {
+        if (!installedApis.has(ctx.api)) {
+            installedApis.add(ctx.api);
+            ctx.api.config.use(mediaGroupTransformer);
+        }
+        return next();
+    });
 
     // Hydrate context with mediaGroups namespace
     composer.use(async (ctx, next) => {
