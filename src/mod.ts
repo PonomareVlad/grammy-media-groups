@@ -54,11 +54,12 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  *     await ctx.replyWithMediaGroup(
  *       group.map((msg) => {
  *         const opts = { caption: msg.caption };
- *         if (msg.photo) return InputMediaBuilder.photo(msg.photo.at(-1)!.file_id, opts);
- *         if (msg.video) return InputMediaBuilder.video(msg.video.file_id, opts);
- *         if (msg.document) return InputMediaBuilder.document(msg.document.file_id, opts);
- *         return InputMediaBuilder.photo(""); // fallback
- *       }),
+ *         switch (true) {
+ *           case "photo" in msg: return InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, opts);
+ *           case "video" in msg: return InputMediaBuilder.video(msg.video!.file_id, opts);
+ *           case "document" in msg: return InputMediaBuilder.document(msg.document!.file_id, opts);
+ *         }
+ *       }).filter(Boolean),
  *     );
  *   }
  * });
