@@ -1,26 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { Api, Context, type StorageAdapter, type UserFromGetMe } from "./deps.deno.ts";
+import { Api, Context, MemorySessionStorage, type UserFromGetMe } from "./deps.deno.ts";
 import type { Message } from "./deps.deno.ts";
 import { type MediaGroupsFlavor, mediaGroups } from "./mod.ts";
-
-/** Simple in-memory StorageAdapter for testing. */
-function createMemoryAdapter(): StorageAdapter<Message[]> & {
-    store: Map<string, Message[]>;
-} {
-    const store = new Map<string, Message[]>();
-    return {
-        store,
-        read: (key) => Promise.resolve(store.get(key)),
-        write: (key, value) => {
-            store.set(key, value);
-            return Promise.resolve();
-        },
-        delete: (key) => {
-            store.delete(key);
-            return Promise.resolve();
-        },
-    };
-}
 
 /** Creates a minimal Message-like object for testing. */
 function msg(
@@ -51,7 +32,7 @@ function createCtx(update: any): TestContext {
 }
 
 Deno.test("mediaGroups exposes getMediaGroup on the composer", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
     assertEquals(typeof mg.getMediaGroup, "function");
 
@@ -67,7 +48,7 @@ Deno.test("mediaGroups exposes getMediaGroup on the composer", async () => {
 });
 
 Deno.test("middleware hydrates ctx.getMediaGroup", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
     // Pre-populate storage
@@ -88,7 +69,7 @@ Deno.test("middleware hydrates ctx.getMediaGroup", async () => {
 });
 
 Deno.test("middleware stores incoming message with media_group_id", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
     const ctx = createCtx({
@@ -104,7 +85,7 @@ Deno.test("middleware stores incoming message with media_group_id", async () => 
 });
 
 Deno.test("middleware returns undefined for messages without media_group_id", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
     const ctx = createCtx({
@@ -119,7 +100,7 @@ Deno.test("middleware returns undefined for messages without media_group_id", as
 });
 
 Deno.test("middleware hydrates reply_to_message with getMediaGroup", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
     // Pre-populate storage with the media group
@@ -144,7 +125,7 @@ Deno.test("middleware hydrates reply_to_message with getMediaGroup", async () =>
 });
 
 Deno.test("middleware does not hydrate reply_to_message without media_group_id", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
     const replyMsg = msg(10, 300); // no media_group_id

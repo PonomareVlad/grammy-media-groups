@@ -1,26 +1,11 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import type { Message, StorageAdapter } from "./deps.deno.ts";
+import { MemorySessionStorage } from "./deps.deno.ts";
+import type { Message } from "./deps.deno.ts";
 import {
     extractMessages,
     MEDIA_GROUP_METHODS,
     storeMessages,
 } from "./storage.ts";
-
-/** Simple in-memory StorageAdapter for testing. */
-function createMemoryAdapter(): StorageAdapter<Message[]> {
-    const store = new Map<string, Message[]>();
-    return {
-        read: (key) => Promise.resolve(store.get(key)),
-        write: (key, value) => {
-            store.set(key, value);
-            return Promise.resolve();
-        },
-        delete: (key) => {
-            store.delete(key);
-            return Promise.resolve();
-        },
-    };
-}
 
 /** Creates a minimal Message-like object for testing. */
 function msg(
@@ -41,13 +26,13 @@ function msg(
 // --- storeMessages ---
 
 Deno.test("storeMessages skips messages without media_group_id", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100)]);
     assertEquals(await adapter.read("any"), undefined);
 });
 
 Deno.test("storeMessages stores a new message", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100, "g1")]);
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 1);
@@ -55,7 +40,7 @@ Deno.test("storeMessages stores a new message", async () => {
 });
 
 Deno.test("storeMessages appends different messages to the same group", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100, "g1")]);
     await storeMessages(adapter, [msg(2, 100, "g1")]);
     const stored = await adapter.read("g1");
@@ -65,7 +50,7 @@ Deno.test("storeMessages appends different messages to the same group", async ()
 });
 
 Deno.test("storeMessages replaces an existing message (update-in-place)", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100, "g1", { text: "old" })]);
     await storeMessages(adapter, [msg(1, 100, "g1", { text: "new" })]);
     const stored = await adapter.read("g1");
@@ -74,7 +59,7 @@ Deno.test("storeMessages replaces an existing message (update-in-place)", async 
 });
 
 Deno.test("storeMessages treats same message_id in different chats as distinct", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100, "g1")]);
     await storeMessages(adapter, [msg(1, 200, "g1")]);
     const stored = await adapter.read("g1");
@@ -133,7 +118,7 @@ Deno.test("MEDIA_GROUP_METHODS contains expected methods", () => {
 // --- storeMessages (batch) ---
 
 Deno.test("storeMessages stores multiple messages in a single batch", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [
         msg(1, 100, "g1"),
         msg(2, 100, "g1"),
@@ -144,13 +129,13 @@ Deno.test("storeMessages stores multiple messages in a single batch", async () =
 });
 
 Deno.test("storeMessages skips messages without media_group_id", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100), msg(2, 100, "g1")]);
     assertEquals(await adapter.read("g1"), [msg(2, 100, "g1")]);
 });
 
 Deno.test("storeMessages replaces existing messages in batch", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, [msg(1, 100, "g1", { text: "old" })]);
     await storeMessages(adapter, [
         msg(1, 100, "g1", { text: "new" }),
@@ -163,7 +148,7 @@ Deno.test("storeMessages replaces existing messages in batch", async () => {
 });
 
 Deno.test("storeMessages handles empty array", async () => {
-    const adapter = createMemoryAdapter();
+    const adapter = new MemorySessionStorage<Message[]>();
     await storeMessages(adapter, []);
     assertEquals(await adapter.read("g1"), undefined);
 });

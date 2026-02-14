@@ -21,37 +21,24 @@ export async function storeMessages(
     adapter: StorageAdapter<Message[]>,
     messages: Message[],
 ): Promise<void> {
-    const groups = new Map<string, Message[]>();
+    const groups: Record<string, Message[]> = {};
     for (const message of messages) {
-        const mediaGroupId = message.media_group_id;
-        if (!mediaGroupId) continue;
-        let group = groups.get(mediaGroupId);
-        if (!group) {
-            group = [];
-            groups.set(mediaGroupId, group);
-        }
-        group.push(message);
+        const { media_group_id } = message;
+        if (!media_group_id) continue;
+        const group = groups[media_group_id] ??=
+            (await adapter.read(media_group_id)) ?? [];
+        const index = group.findIndex(
+            (m) =>
+                m.message_id === message.message_id &&
+                m.chat.id === message.chat.id,
+        );
+        group[index >= 0 ? index : group.length] = message;
     }
-
-    for (const [mediaGroupId, newMessages] of groups) {
-        const existing = (await adapter.read(mediaGroupId)) ?? [];
-
-        for (const message of newMessages) {
-            const index = existing.findIndex(
-                (m) =>
-                    m.message_id === message.message_id &&
-                    m.chat.id === message.chat.id,
-            );
-
-            if (index >= 0) {
-                existing[index] = message;
-            } else {
-                existing.push(message);
-            }
-        }
-
-        await adapter.write(mediaGroupId, existing);
-    }
+    await Promise.all(
+        Object.entries(groups).map(([key, value]) =>
+            adapter.write(key, value)
+        ),
+    );
 }
 
 /**
