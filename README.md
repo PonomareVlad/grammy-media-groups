@@ -61,11 +61,13 @@ bot.command("album", async (ctx) => {
     const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
     if (group) {
         await ctx.replyWithMediaGroup(
-            group.map((msg) =>
-                InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, {
-                    caption: msg.caption,
-                }),
-            ),
+            group.map((msg) => {
+                const opts = { caption: msg.caption };
+                if (msg.photo) return InputMediaBuilder.photo(msg.photo.at(-1)!.file_id, opts);
+                if (msg.video) return InputMediaBuilder.video(msg.video.file_id, opts);
+                if (msg.document) return InputMediaBuilder.document(msg.document.file_id, opts);
+                return InputMediaBuilder.photo(""); // fallback
+            }),
         );
     }
 });
