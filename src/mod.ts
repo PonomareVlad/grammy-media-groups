@@ -63,6 +63,7 @@ async function storeMessage(
     try {
         existing = (await adapter.read(mediaGroupId)) ?? [];
     } catch {
+        // Storage read failures are non-critical
         return;
     }
 
@@ -80,7 +81,7 @@ async function storeMessage(
     try {
         await adapter.write(mediaGroupId, existing);
     } catch {
-        // Silently ignore write failures
+        // Storage write failures are non-critical
     }
 }
 
