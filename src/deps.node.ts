@@ -2,6 +2,7 @@ export {
     Api,
     Composer,
     Context,
+    MemorySessionStorage,
     type StorageAdapter,
     type Transformer,
 } from "grammy";

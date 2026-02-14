@@ -1,6 +1,7 @@
 import {
     Composer,
     Context,
+    MemorySessionStorage,
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
@@ -27,20 +28,20 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  * from incoming updates and outgoing API responses, and hydrate the
  * context with methods to retrieve stored media groups.
  *
- * @param adapter Storage adapter for persisting media group data
+ * @param adapter Storage adapter for persisting media group data (defaults to `MemorySessionStorage`)
  * @returns A composer with middleware installed
  *
  * @example
  * ```typescript
- * import { Bot, Context, MemorySessionStorage } from "grammy";
+ * import { Bot, Context } from "grammy";
  * import { type MediaGroupsFlavor, mediaGroups } from "@grammyjs/media-groups";
  *
  * type MyContext = Context & MediaGroupsFlavor;
  *
- * const adapter = new MemorySessionStorage<Message[]>();
  * const bot = new Bot<MyContext>("<token>");
  *
- * const mg = mediaGroups(adapter);
+ * // Uses MemorySessionStorage by default
+ * const mg = mediaGroups();
  * bot.use(mg);
  *
  * // Programmatic access
@@ -62,7 +63,7 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  * ```
  */
 export function mediaGroups(
-    adapter: StorageAdapter<Message[]>,
+    adapter: StorageAdapter<Message[]> = new MemorySessionStorage<Message[]>(),
 ): Composer<MediaGroupsContext> & {
     /**
      * Fetches a media group by its ID from storage.

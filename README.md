@@ -37,19 +37,15 @@ import { mediaGroups, type MediaGroupsFlavor } from "https://deno.land/x/grammy_
 ## Usage
 
 ```typescript
-import { Bot, Context, MemorySessionStorage } from "grammy";
-import type { Message } from "grammy/types";
+import { Bot, Context } from "grammy";
 import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
 
 const bot = new Bot<MyContext>("<your-bot-token>");
 
-// Use any StorageAdapter<Message[]> — here we use an in-memory store
-const adapter = new MemorySessionStorage<Message[]>();
-
-// Install the plugin
-const mg = mediaGroups(adapter);
+// Uses MemorySessionStorage by default — pass a custom adapter for persistence
+const mg = mediaGroups();
 bot.use(mg);
 
 // Retrieve the media group of the current message
