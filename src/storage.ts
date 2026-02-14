@@ -5,11 +5,9 @@ import type { Message, StorageAdapter } from "./deps.deno.ts";
  */
 export const MEDIA_GROUP_METHODS: string[] = [
     "sendMediaGroup",
-    "copyMessage",
     "forwardMessage",
     "editMessageMedia",
     "editMessageCaption",
-    "editMessageText",
     "editMessageReplyMarkup",
 ];
 

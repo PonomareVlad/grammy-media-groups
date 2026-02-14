@@ -10,7 +10,8 @@ outgoing API responses, and lets you retrieve the full group at any time.
 - **Middleware** — automatically stores every incoming message that has a
   `media_group_id`.
 - **Transformer** — intercepts Telegram API responses (`sendMediaGroup`,
-  `copyMessage`, `forwardMessage`, `editMessage*`) and stores returned messages.
+  `forwardMessage`, `editMessageMedia`, `editMessageCaption`,
+  `editMessageReplyMarkup`) and stores returned messages.
 - **Context hydration** — adds `ctx.getMediaGroup()` to fetch the current
   message's media group.
 - **Reply hydration** — adds `getMediaGroup()` to `reply_to_message` when it

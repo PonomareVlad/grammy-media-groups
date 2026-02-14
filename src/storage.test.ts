@@ -123,11 +123,9 @@ Deno.test("extractMessages filters valid messages from array", () => {
 Deno.test("MEDIA_GROUP_METHODS contains expected methods", () => {
     const expected = [
         "sendMediaGroup",
-        "copyMessage",
         "forwardMessage",
         "editMessageMedia",
         "editMessageCaption",
-        "editMessageText",
         "editMessageReplyMarkup",
     ];
     assertEquals(MEDIA_GROUP_METHODS, expected);
