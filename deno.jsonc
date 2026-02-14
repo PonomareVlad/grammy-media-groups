@@ -3,17 +3,9 @@
     "fmt": {
         "indentWidth": 4,
         "proseWrap": "preserve",
-        "exclude": [
-            "./node_modules/",
-            "./out/",
-            "./package-lock.json"
-        ]
+        "exclude": ["./node_modules/", "./out/", "./package-lock.json"],
     },
     "lint": {
-        "exclude": [
-            "./node_modules/",
-            "./out/",
-            "./package-lock.json"
-        ]
-    }
+        "exclude": ["./node_modules/", "./out/", "./package-lock.json"],
+    },
 }

@@ -31,7 +31,10 @@ npm install @grammyjs/media-groups
 
 ```typescript
 // Update the URL below once the module is published on deno.land
-import { mediaGroups, type MediaGroupsFlavor } from "https://deno.land/x/grammy_media_groups/mod.ts";
+import {
+    mediaGroups,
+    type MediaGroupsFlavor,
+} from "https://deno.land/x/grammy_media_groups/mod.ts";
 ```
 
 ## Usage
@@ -61,14 +64,28 @@ bot.command("album", async (ctx) => {
     const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
     if (group) {
         await ctx.replyWithMediaGroup(
-            group.map((msg) => {
-                const opts = { caption: msg.caption };
-                switch (true) {
-                    case "photo" in msg: return InputMediaBuilder.photo(msg.photo!.at(-1)!.file_id, opts);
-                    case "video" in msg: return InputMediaBuilder.video(msg.video!.file_id, opts);
-                    case "document" in msg: return InputMediaBuilder.document(msg.document!.file_id, opts);
-                }
-            }).filter(Boolean),
+            group
+                .map((msg) => {
+                    const opts = { caption: msg.caption };
+                    switch (true) {
+                        case "photo" in msg:
+                            return InputMediaBuilder.photo(
+                                msg.photo!.at(-1)!.file_id,
+                                opts,
+                            );
+                        case "video" in msg:
+                            return InputMediaBuilder.video(
+                                msg.video!.file_id,
+                                opts,
+                            );
+                        case "document" in msg:
+                            return InputMediaBuilder.document(
+                                msg.document!.file_id,
+                                opts,
+                            );
+                    }
+                })
+                .filter(Boolean),
         );
     }
 });

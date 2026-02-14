@@ -6,7 +6,4 @@ export {
     type StorageAdapter,
     type Transformer,
 } from "grammy";
-export type {
-    Message,
-    UserFromGetMe,
-} from "grammy/types";
+export type { Message, UserFromGetMe } from "grammy/types";
