@@ -1,4 +1,5 @@
 export {
+    Api,
     Composer,
     Context,
     type StorageAdapter,
@@ -6,4 +7,5 @@ export {
 } from "grammy";
 export type {
     Message,
+    UserFromGetMe,
 } from "grammy/types";
