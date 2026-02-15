@@ -28,17 +28,16 @@ outgoing API responses, and lets you retrieve the full group at any time.
 ### Node.js
 
 ```bash
-npm install @grammyjs/media-groups
+npm install github:PonomareVlad/grammy-media-groups
 ```
 
 ### Deno
 
 ```typescript
-// Update the URL below once the module is published on deno.land
 import {
     mediaGroups,
     type MediaGroupsFlavor,
-} from "https://deno.land/x/grammy_media_groups/mod.ts";
+} from "https://raw.githubusercontent.com/PonomareVlad/grammy-media-groups/main/src/mod.ts";
 ```
 
 ## Usage

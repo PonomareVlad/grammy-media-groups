@@ -1,8 +1,8 @@
 {
     "name": "@grammyjs/media-groups",
-    "version": "1.0.0",
+    "version": "0.0.0",
     "description": "Media Groups Storage Plugin for grammY",
-    "homepage": "https://github.com/PonomareVlad/grammy-media-groups-storage",
+    "homepage": "https://github.com/PonomareVlad/grammy-media-groups",
     "main": "./out/mod.js",
     "type": "commonjs",
     "scripts": {
@@ -11,7 +11,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/PonomareVlad/grammy-media-groups-storage.git"
+        "url": "git+https://github.com/PonomareVlad/grammy-media-groups.git"
     },
     "exports": {
         ".": "./out/mod.js"
@@ -22,7 +22,7 @@
     "author": "PonomareVlad",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/PonomareVlad/grammy-media-groups-storage/issues"
+        "url": "https://github.com/PonomareVlad/grammy-media-groups/issues"
     },
     "peerDependencies": {
         "grammy": "^1.40.0"
