@@ -68,13 +68,13 @@ bot.on("message", async (ctx) => {
     if (group?.length === 1) {
         await ctx.reply("Media group detected", {
             reply_parameters: { message_id: ctx.msg.message_id },
-            reply_markup: new InlineKeyboard().text("Resend album", "resend"),
+            reply_markup: new InlineKeyboard().text("Copy", "copy"),
         });
     }
 });
 
-// Reply to an album message with /album to resend the full media group
-bot.command("album", async (ctx) => {
+// Reply to an album message with /copy to resend the full media group
+bot.command("copy", async (ctx) => {
     const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
@@ -84,7 +84,7 @@ bot.command("album", async (ctx) => {
 });
 
 // Handle inline keyboard button to resend a media group
-bot.on("callback_query:data", async (ctx) => {
+bot.callbackQuery("copy", async (ctx) => {
     const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
