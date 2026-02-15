@@ -45,10 +45,7 @@ import {
 
 ```typescript
 import { Bot, Context, InputMediaBuilder } from "grammy";
-import {
-    mediaGroups,
-    type MediaGroupsFlavor,
-} from "@grammyjs/media-groups";
+import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
 

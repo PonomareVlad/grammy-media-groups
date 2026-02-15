@@ -218,7 +218,7 @@ export function mediaGroups(
     const store = (message: Message) => storeMessages(adapter, [message]);
 
     const deleteMediaGroup = (mediaGroupId: string) =>
-        adapter.delete(mediaGroupId);
+        Promise.resolve(adapter.delete(mediaGroupId));
 
     // Hydrate context and store incoming messages
     composer.use(async (ctx, next) => {
