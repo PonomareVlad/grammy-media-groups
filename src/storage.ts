@@ -1,10 +1,23 @@
 import { InputMediaBuilder, type StorageAdapter } from "./deps.deno.ts";
 import type {
-    InputMedia,
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
     Message,
     MessageEntity,
     ParseMode,
 } from "./deps.deno.ts";
+
+/**
+ * Union of `InputMedia` types accepted by
+ * {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
+ */
+export type MediaGroupInputMedia =
+    | InputMediaAudio
+    | InputMediaDocument
+    | InputMediaPhoto
+    | InputMediaVideo;
 
 /** Wraps a single Message in an array. */
 const toArray = (result: Message): Message[] => [result];
@@ -124,9 +137,9 @@ export interface ToInputMediaOptions {
 export function toInputMedia(
     messages: Message[],
     options: ToInputMediaOptions = {},
-): InputMedia[] {
+): MediaGroupInputMedia[] {
     const { has_spoiler } = options;
-    return messages.map((msg, i): InputMedia | undefined => {
+    return messages.map((msg, i): MediaGroupInputMedia | undefined => {
         const hasCaption = options.caption !== undefined && i === 0;
         const base = {
             caption: hasCaption ? options.caption : msg.caption,
@@ -156,5 +169,5 @@ export function toInputMedia(
             default:
                 return undefined;
         }
-    }).filter(Boolean) as InputMedia[];
+    }).filter(Boolean) as MediaGroupInputMedia[];
 }

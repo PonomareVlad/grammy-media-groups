@@ -1,4 +1,4 @@
-import type { InputMedia, Message } from "./deps.deno.ts";
+import type { Message } from "./deps.deno.ts";
 import {
     Composer,
     Context,
@@ -6,11 +6,17 @@ import {
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
-import { MEDIA_GROUP_METHODS, storeMessages, toInputMedia } from "./storage.ts";
+import {
+    MEDIA_GROUP_METHODS,
+    type MediaGroupInputMedia,
+    storeMessages,
+    toInputMedia,
+} from "./storage.ts";
 import type { ToInputMediaOptions } from "./storage.ts";
 
 export {
     MEDIA_GROUP_METHODS,
+    type MediaGroupInputMedia,
     storeMessages,
     toInputMedia,
     type ToInputMediaOptions,
@@ -81,7 +87,7 @@ export type MediaGroupsFlavor = {
         toInputMedia: (
             messages: Message[],
             options?: ToInputMediaOptions,
-        ) => InputMedia[];
+        ) => MediaGroupInputMedia[];
     };
 };
 
