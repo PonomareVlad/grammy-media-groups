@@ -29,10 +29,10 @@
         "url": "https://github.com/PonomareVlad/grammy-media-groups/issues"
     },
     "peerDependencies": {
-        "grammy": "^1.40.0"
+        "grammy": "^1.15.2"
     },
     "devDependencies": {
-        "deno2node": "^1.16.0"
+        "deno2node": "^1.3.0"
     },
     "keywords": [
         "grammY",
