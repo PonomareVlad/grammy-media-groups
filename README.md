@@ -22,7 +22,7 @@ outgoing API responses, and lets you retrieve the full group at any time.
   and use `ctx.mediaGroups.store(message)` for full control.
 - **Delete** — `ctx.mediaGroups.delete(mediaGroupId)` or
   `mg.deleteMediaGroup(mediaGroupId)` removes a media group from storage.
-- **Copy** — `toInputMedia(messages)` or
+- **Convert** — `toInputMedia(messages)` or
   `ctx.mediaGroups.toInputMedia(messages)` converts stored messages into
   `InputMedia[]` ready for `sendMediaGroup`. Supports photo, video, document,
   audio and animation, with optional caption/parse_mode override.
@@ -67,10 +67,11 @@ bot.on("message", async (ctx) => {
     const group = await ctx.mediaGroups.getForMsg();
     if (group?.length === 1) {
         await ctx.reply("Media group detected", {
+            reply_parameters: { message_id: ctx.msg.message_id },
             reply_markup: {
                 inline_keyboard: [[{
                     text: "Resend album",
-                    callback_data: ctx.msg.media_group_id,
+                    callback_data: "resend",
                 }]],
             },
         });
@@ -89,7 +90,7 @@ bot.command("album", async (ctx) => {
 
 // Handle inline keyboard button to resend a media group
 bot.on("callback_query:data", async (ctx) => {
-    const group = await mg.getMediaGroup(ctx.callbackQuery.data);
+    const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
             ctx.mediaGroups.toInputMedia(group),

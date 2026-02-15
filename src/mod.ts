@@ -73,7 +73,9 @@ export type MediaGroupsFlavor = {
          * audio and animation messages (animations are mapped to video).
          *
          * @param messages Array of messages belonging to a media group
-         * @param options Optional caption/parse_mode/caption_entities override applied to the first item
+         * @param options Optional overrides: caption, parse_mode, caption_entities,
+         *     show_caption_above_media (first item only when caption is set),
+         *     has_spoiler (all photo/video items)
          * @returns An array of `InputMedia` objects ready to be sent
          */
         toInputMedia: (
@@ -158,10 +160,11 @@ export function mediaGroupTransformer(
  *     const group = await ctx.mediaGroups.getForMsg();
  *     if (group?.length === 1) {
  *         await ctx.reply("Media group detected", {
+ *             reply_parameters: { message_id: ctx.msg.message_id },
  *             reply_markup: {
  *                 inline_keyboard: [[{
  *                     text: "Resend album",
- *                     callback_data: ctx.msg.media_group_id,
+ *                     callback_data: "resend",
  *                 }]],
  *             },
  *         });
@@ -170,7 +173,7 @@ export function mediaGroupTransformer(
  *
  * // Handle inline keyboard button to resend a media group
  * bot.on("callback_query:data", async (ctx) => {
- *     const group = await mg.getMediaGroup(ctx.callbackQuery.data);
+ *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
  *             ctx.mediaGroups.toInputMedia(group),

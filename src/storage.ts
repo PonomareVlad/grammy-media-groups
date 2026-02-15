@@ -68,13 +68,22 @@ export async function storeMessages(
 export interface ToInputMediaOptions {
     /** Override caption on the first item of the media group. */
     caption?: string;
-    /** Text formatting mode for the overridden caption. */
+    /**
+     * Text formatting mode for the overridden caption.
+     * Only applied when `caption` is provided.
+     */
     parse_mode?: ParseMode;
-    /** Entities for the overridden caption (used instead of `parse_mode`). */
+    /**
+     * Entities for the overridden caption.
+     * Only applied when `caption` is provided.
+     */
     caption_entities?: MessageEntity[];
-    /** Show caption above the media (applies to photo and video items). */
+    /**
+     * Show caption above the media.
+     * Only applied when `caption` is provided (first item).
+     */
     show_caption_above_media?: boolean;
-    /** Mark media as containing a spoiler (applies to photo and video items). */
+    /** Mark media as containing a spoiler (applies to all photo and video items). */
     has_spoiler?: boolean;
 }
 
@@ -87,7 +96,9 @@ export interface ToInputMediaOptions {
  * accept `"animation"` as an input media type.
  *
  * @param messages Array of messages belonging to a media group
- * @param options  Optional caption/parse_mode override applied to the first item
+ * @param options  Optional overrides: caption, parse_mode, caption_entities,
+ *                 show_caption_above_media (all first item only when caption is set),
+ *                 has_spoiler (all photo/video items)
  * @returns An array of `InputMedia` objects ready to be sent
  *
  * @example
@@ -114,33 +125,34 @@ export function toInputMedia(
     messages: Message[],
     options: ToInputMediaOptions = {},
 ): InputMedia[] {
-    const { show_caption_above_media, has_spoiler } = options;
-    return messages.flatMap((msg, i) => {
-        const overrideCaption = options.caption !== undefined && i === 0;
+    const { has_spoiler } = options;
+    return messages.map((msg, i): InputMedia | undefined => {
+        const hasCaption = options.caption !== undefined && i === 0;
         const base = {
-            caption: overrideCaption ? options.caption : msg.caption,
-            parse_mode: overrideCaption ? options.parse_mode : undefined,
-            caption_entities: overrideCaption
+            caption: hasCaption ? options.caption : msg.caption,
+            parse_mode: hasCaption ? options.parse_mode : undefined,
+            caption_entities: hasCaption
                 ? options.caption_entities
                 : msg.caption_entities,
+            show_caption_above_media: hasCaption
+                ? options.show_caption_above_media
+                : undefined,
         };
-        const visual = { ...base, show_caption_above_media, has_spoiler };
+        const visual = { ...base, has_spoiler };
         switch (true) {
-            case "photo" in msg && !!msg.photo:
+            case "photo" in msg:
                 return InputMediaBuilder.photo(
-                    msg.photo.at(-1)!.file_id,
+                    msg.photo!.at(-1)!.file_id,
                     visual,
                 );
-            case "video" in msg && !!msg.video:
-                return InputMediaBuilder.video(msg.video.file_id, visual);
-            case "animation" in msg && !!msg.animation:
-                return InputMediaBuilder.video(msg.animation.file_id, visual);
-            case "document" in msg && !!msg.document:
-                return InputMediaBuilder.document(msg.document.file_id, base);
-            case "audio" in msg && !!msg.audio:
-                return InputMediaBuilder.audio(msg.audio.file_id, base);
-            default:
-                return [];
+            case "video" in msg:
+                return InputMediaBuilder.video(msg.video!.file_id, visual);
+            case "animation" in msg:
+                return InputMediaBuilder.video(msg.animation!.file_id, visual);
+            case "document" in msg:
+                return InputMediaBuilder.document(msg.document!.file_id, base);
+            case "audio" in msg:
+                return InputMediaBuilder.audio(msg.audio!.file_id, base);
         }
-    });
+    }).filter(Boolean) as InputMedia[];
 }

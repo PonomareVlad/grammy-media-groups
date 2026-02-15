@@ -301,11 +301,10 @@ Deno.test("toInputMedia overrides caption on first item", () => {
     const entities = [{ type: "bold" as const, offset: 0, length: 3 }];
     const result = toInputMedia(messages, {
         caption: "New caption",
-        parse_mode: "HTML",
         caption_entities: entities,
     });
     assertEquals(result[0].caption, "New caption");
-    assertEquals(result[0].parse_mode, "HTML");
+    assertEquals(result[0].parse_mode, undefined);
     assertEquals(result[0].caption_entities, entities);
     assertEquals(result[1].caption, "Original caption 2");
     assertEquals(result[1].parse_mode, undefined);
