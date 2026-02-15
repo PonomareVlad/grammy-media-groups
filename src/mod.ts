@@ -11,6 +11,21 @@ import { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 export { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 
 /**
+ * Options for the media groups plugin.
+ */
+export interface MediaGroupsOptions {
+    /**
+     * When `true` (default), the middleware automatically stores every
+     * incoming message that has a `media_group_id` (including
+     * `reply_to_message` and `pinned_message`).
+     *
+     * Set to `false` to disable automatic storing. In that case use
+     * `ctx.mediaGroups.store(message)` to store messages manually.
+     */
+    autoStore?: boolean;
+}
+
+/**
  * Flavor for context that adds media group methods.
  */
 export type MediaGroupsFlavor = {
@@ -33,6 +48,13 @@ export type MediaGroupsFlavor = {
          * Returns `undefined` if there is no pinned message or it is not part of a media group.
          */
         getMediaGroupForPinned: () => Promise<Message[] | undefined>;
+        /**
+         * Manually stores a message in its media group.
+         * The message must have a `media_group_id` to be stored.
+         *
+         * @param message The message to store
+         */
+        store: (message: Message) => Promise<void>;
     };
 };
 
@@ -71,6 +93,7 @@ export function mediaGroupTransformer(
  * media groups.
  *
  * @param adapter Storage adapter for persisting media group data (defaults to `MemorySessionStorage`)
+ * @param options Plugin options
  * @returns A composer with middleware installed
  *
  * @example
@@ -133,9 +156,22 @@ export function mediaGroupTransformer(
  *     if (group) console.log(`Album has ${group.length} items`);
  * });
  * ```
+ *
+ * @example Manual mode — disable automatic storing and use `ctx.mediaGroups.store()` instead:
+ * ```typescript
+ * const mg = mediaGroups(undefined, { autoStore: false });
+ * bot.use(mg);
+ *
+ * bot.on("message", async (ctx) => {
+ *     if (ctx.msg.media_group_id) {
+ *         await ctx.mediaGroups.store(ctx.msg);
+ *     }
+ * });
+ * ```
  */
 export function mediaGroups(
     adapter: StorageAdapter<Message[]> = new MemorySessionStorage<Message[]>(),
+    options: MediaGroupsOptions = {},
 ): Composer<MediaGroupsContext> & {
     /** The storage adapter used by the plugin. */
     adapter: StorageAdapter<Message[]>;
@@ -147,6 +183,7 @@ export function mediaGroups(
      */
     getMediaGroup: (mediaGroupId: string) => Promise<Message[] | undefined>;
 } {
+    const { autoStore = true } = options;
     const composer = new Composer<MediaGroupsContext>();
 
     const getMediaGroup = async (
@@ -154,6 +191,8 @@ export function mediaGroups(
     ): Promise<Message[] | undefined> => {
         return await adapter.read(mediaGroupId);
     };
+
+    const store = (message: Message) => storeMessages(adapter, [message]);
 
     // Hydrate context and store incoming messages
     composer.use(async (ctx, next) => {
@@ -176,16 +215,19 @@ export function mediaGroups(
             getMediaGroup: () => getGroupFor(msg),
             getMediaGroupForReply: () => getGroupFor(replyMsg),
             getMediaGroupForPinned: () => getGroupFor(pinnedMsg),
+            store,
         };
 
-        // Collect messages to store in batch
-        const toStore: Message[] = [];
-        if (msg?.media_group_id) toStore.push(msg);
-        if (replyMsg?.media_group_id) toStore.push(replyMsg);
-        if (pinnedMsg?.media_group_id) toStore.push(pinnedMsg);
+        if (autoStore) {
+            // Collect messages to store in batch
+            const toStore: Message[] = [];
+            if (msg?.media_group_id) toStore.push(msg);
+            if (replyMsg?.media_group_id) toStore.push(replyMsg);
+            if (pinnedMsg?.media_group_id) toStore.push(pinnedMsg);
 
-        if (toStore.length > 0) {
-            await storeMessages(adapter, toStore);
+            if (toStore.length > 0) {
+                await storeMessages(adapter, toStore);
+            }
         }
 
         return next();

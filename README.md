@@ -18,6 +18,8 @@ outgoing API responses, and lets you retrieve the full group at any time.
   `ctx.mediaGroups.getMediaGroupForPinned()` for sub-messages.
 - **Programmatic access** — the returned composer exposes
   `getMediaGroup(mediaGroupId)` for use outside of middleware.
+- **Manual mode** — pass `{ autoStore: false }` to disable automatic storing
+  and use `ctx.mediaGroups.store(message)` for full control.
 
 ## Installation
 
@@ -100,4 +102,27 @@ bot.command("album", async (ctx) => {
 
 // Programmatic access outside middleware
 const messages = await mg.getMediaGroup("some-media-group-id");
+```
+
+### Manual Mode
+
+To disable automatic storing, pass `{ autoStore: false }`. This gives you full
+control over which messages get stored via `ctx.mediaGroups.store()`:
+
+```typescript
+const mg = mediaGroups(undefined, { autoStore: false });
+bot.use(mg);
+
+bot.on("message", async (ctx) => {
+    // Only store messages you care about
+    if (ctx.msg.media_group_id) {
+        await ctx.mediaGroups.store(ctx.msg);
+    }
+
+    // You can also manually store reply_to_message
+    const reply = ctx.msg.reply_to_message;
+    if (reply?.media_group_id) {
+        await ctx.mediaGroups.store(reply);
+    }
+});
 ```

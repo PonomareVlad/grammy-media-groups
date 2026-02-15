@@ -251,3 +251,87 @@ Deno.test(
         assertEquals(stored?.[0].message_id, 10);
     },
 );
+
+Deno.test(
+    "autoStore: false skips automatic message storing",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter, { autoStore: false });
+
+        const ctx = createCtx({
+            update_id: 1,
+            message: msg(5, 200, "g7"),
+        });
+
+        await mg.middleware()(ctx, async () => {});
+
+        // Should NOT be stored automatically
+        const stored = await adapter.read("g7");
+        assertEquals(stored, undefined);
+    },
+);
+
+Deno.test(
+    "ctx.mediaGroups.store() manually stores a message",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter, { autoStore: false });
+
+        const message = msg(5, 200, "g8");
+        const ctx = createCtx({
+            update_id: 1,
+            message,
+        });
+
+        await mg.middleware()(ctx, async () => {
+            await ctx.mediaGroups.store(message);
+        });
+
+        const stored = await adapter.read("g8");
+        assertEquals(stored?.length, 1);
+        assertEquals(stored?.[0].message_id, 5);
+    },
+);
+
+Deno.test(
+    "ctx.mediaGroups.store() works in auto mode too",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        const message = msg(5, 200, "g9");
+        const ctx = createCtx({
+            update_id: 1,
+            message: msg(1, 100), // no media_group_id
+        });
+
+        await mg.middleware()(ctx, async () => {
+            await ctx.mediaGroups.store(message);
+        });
+
+        const stored = await adapter.read("g9");
+        assertEquals(stored?.length, 1);
+        assertEquals(stored?.[0].message_id, 5);
+    },
+);
+
+Deno.test(
+    "autoStore: false still hydrates getMediaGroup methods",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter, { autoStore: false });
+
+        // Pre-populate storage
+        await adapter.write("g10", [msg(1, 100, "g10"), msg(2, 100, "g10")]);
+
+        const ctx = createCtx({
+            update_id: 1,
+            message: msg(1, 100, "g10"),
+        });
+
+        await mg.middleware()(ctx, async () => {
+            const group = await ctx.mediaGroups.getMediaGroup();
+            assertEquals(group?.length, 2);
+        });
+    },
+);
