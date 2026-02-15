@@ -48,7 +48,7 @@ import {
 ## Usage
 
 ```typescript
-import { Bot, Context } from "grammy";
+import { Bot, Context, InlineKeyboard } from "grammy";
 import { mediaGroups, type MediaGroupsFlavor } from "grammy-media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
@@ -68,12 +68,7 @@ bot.on("message", async (ctx) => {
     if (group?.length === 1) {
         await ctx.reply("Media group detected", {
             reply_parameters: { message_id: ctx.msg.message_id },
-            reply_markup: {
-                inline_keyboard: [[{
-                    text: "Resend album",
-                    callback_data: "resend",
-                }]],
-            },
+            reply_markup: new InlineKeyboard().text("Resend album", "resend"),
         });
     }
 });
