@@ -13,13 +13,13 @@ export const MEDIA_GROUP_METHODS: Record<string, (result: any) => Message[]> = {
     forwardMessage: (result) => [result],
     /** Returns `Message | true` */
     editMessageMedia: (result) =>
-        typeof result === "object" ? [result] : [],
+        result !== null && typeof result === "object" ? [result] : [],
     /** Returns `Message | true` */
     editMessageCaption: (result) =>
-        typeof result === "object" ? [result] : [],
+        result !== null && typeof result === "object" ? [result] : [],
     /** Returns `Message | true` */
     editMessageReplyMarkup: (result) =>
-        typeof result === "object" ? [result] : [],
+        result !== null && typeof result === "object" ? [result] : [],
 };
 
 /**
