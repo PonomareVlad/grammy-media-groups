@@ -1,4 +1,4 @@
-import type { Message } from "./deps.deno.ts";
+import type { InputMedia, Message } from "./deps.deno.ts";
 import {
     Composer,
     Context,
@@ -6,9 +6,19 @@ import {
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
-import { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
+import {
+    copyMediaGroup,
+    MEDIA_GROUP_METHODS,
+    storeMessages,
+} from "./storage.ts";
+import type { CopyMediaGroupOptions } from "./storage.ts";
 
-export { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
+export {
+    copyMediaGroup,
+    type CopyMediaGroupOptions,
+    MEDIA_GROUP_METHODS,
+    storeMessages,
+} from "./storage.ts";
 
 /**
  * Options for the media groups plugin.
@@ -61,6 +71,19 @@ export type MediaGroupsFlavor = {
          * @param mediaGroupId The media group ID to delete
          */
         delete: (mediaGroupId: string) => Promise<void>;
+        /**
+         * Converts an array of media group messages into `InputMedia[]`
+         * suitable for `sendMediaGroup`. Supports photo, video, document,
+         * audio and animation messages.
+         *
+         * @param messages Array of messages belonging to a media group
+         * @param options Optional caption/parse_mode override applied to the first item
+         * @returns An array of `InputMedia` objects ready to be sent
+         */
+        copyMediaGroup: (
+            messages: Message[],
+            options?: CopyMediaGroupOptions,
+        ) => InputMedia[];
     };
 };
 
@@ -104,7 +127,7 @@ export function mediaGroupTransformer(
  *
  * @example
  * ```typescript
- * import { Bot, Context, InputMediaBuilder } from "grammy";
+ * import { Bot, Context } from "grammy";
  * import {
  *     type MediaGroupsFlavor,
  *     mediaGroups,
@@ -129,28 +152,20 @@ export function mediaGroupTransformer(
  *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
- *             group
- *                 .map((msg) => {
- *                     const opts = {
- *                         caption: msg.caption,
- *                         caption_entities: msg.caption_entities,
- *                     };
- *                     switch (true) {
- *                         case "photo" in msg: {
- *                             const id = msg.photo?.at(-1)?.file_id;
- *                             return InputMediaBuilder.photo(id, opts);
- *                         }
- *                         case "video" in msg: {
- *                             const id = msg.video?.file_id;
- *                             return InputMediaBuilder.video(id, opts);
- *                         }
- *                         case "document" in msg: {
- *                             const id = msg.document?.file_id;
- *                             return InputMediaBuilder.document(id, opts);
- *                         }
- *                     }
- *                 })
- *                 .filter(Boolean),
+ *             ctx.mediaGroups.copyMediaGroup(group),
+ *         );
+ *     }
+ * });
+ *
+ * // With custom caption
+ * bot.command("copy", async (ctx) => {
+ *     const group = await ctx.mediaGroups.getForReply();
+ *     if (group) {
+ *         await ctx.replyWithMediaGroup(
+ *             ctx.mediaGroups.copyMediaGroup(group, {
+ *                 caption: "<b>Forwarded album</b>",
+ *                 parse_mode: "HTML",
+ *             }),
  *         );
  *     }
  * });
@@ -234,6 +249,7 @@ export function mediaGroups(
             getForPinned: () => getGroupFor(ctx.msg?.pinned_message),
             store,
             delete: deleteMediaGroup,
+            copyMediaGroup,
         };
 
         if (autoStore) {

@@ -22,6 +22,10 @@ outgoing API responses, and lets you retrieve the full group at any time.
   and use `ctx.mediaGroups.store(message)` for full control.
 - **Delete** — `ctx.mediaGroups.delete(mediaGroupId)` or
   `mg.deleteMediaGroup(mediaGroupId)` removes a media group from storage.
+- **Copy** — `copyMediaGroup(messages)` or
+  `ctx.mediaGroups.copyMediaGroup(messages)` converts stored messages into
+  `InputMedia[]` ready for `sendMediaGroup`. Supports photo, video, document,
+  audio and animation, with optional caption/parse_mode override.
 
 ## Installation
 
@@ -35,6 +39,7 @@ npm install github:PonomareVlad/grammy-media-groups
 
 ```typescript
 import {
+    copyMediaGroup,
     mediaGroups,
     type MediaGroupsFlavor,
 } from "https://raw.githubusercontent.com/PonomareVlad/grammy-media-groups/main/src/mod.ts";
@@ -43,7 +48,7 @@ import {
 ## Usage
 
 ```typescript
-import { Bot, Context, InputMediaBuilder } from "grammy";
+import { Bot, Context } from "grammy";
 import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
@@ -70,28 +75,20 @@ bot.command("album", async (ctx) => {
     const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
-            group
-                .map((msg) => {
-                    const opts = {
-                        caption: msg.caption,
-                        caption_entities: msg.caption_entities,
-                    };
-                    switch (true) {
-                        case "photo" in msg: {
-                            const id = msg.photo?.at(-1)?.file_id;
-                            return InputMediaBuilder.photo(id, opts);
-                        }
-                        case "video" in msg: {
-                            const id = msg.video?.file_id;
-                            return InputMediaBuilder.video(id, opts);
-                        }
-                        case "document" in msg: {
-                            const id = msg.document?.file_id;
-                            return InputMediaBuilder.document(id, opts);
-                        }
-                    }
-                })
-                .filter(Boolean),
+            ctx.mediaGroups.copyMediaGroup(group),
+        );
+    }
+});
+
+// Resend with a custom caption
+bot.command("copy", async (ctx) => {
+    const group = await ctx.mediaGroups.getForReply();
+    if (group) {
+        await ctx.replyWithMediaGroup(
+            ctx.mediaGroups.copyMediaGroup(group, {
+                caption: "<b>Forwarded album</b>",
+                parse_mode: "HTML",
+            }),
         );
     }
 });
