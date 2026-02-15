@@ -170,7 +170,7 @@ export function mediaGroupTransformer(
  *     }
  * });
  *
- * // Access media group of current message via namespace
+ * // Reply once when the first message of a media group arrives
  * bot.on("message", async (ctx) => {
  *     const group = await ctx.mediaGroups.getForMsg();
  *     if (group?.length === 1) {

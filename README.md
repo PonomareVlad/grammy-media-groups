@@ -62,7 +62,7 @@ bot.use(mg);
 // Install transformer for outgoing API responses
 bot.api.config.use(mg.transformer);
 
-// Prompt the user to send /album when a media group is detected
+// Reply once when the first message of a media group arrives
 bot.on("message", async (ctx) => {
     const group = await ctx.mediaGroups.getForMsg();
     if (group?.length === 1) {
