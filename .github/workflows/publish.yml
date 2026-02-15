@@ -34,4 +34,4 @@ jobs:
 
             - run: npm publish
 
-            - run: git push --tags
+            - run: git push --follow-tags
