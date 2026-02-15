@@ -202,41 +202,19 @@ export function mediaGroups(
             return id ? getMediaGroup(id) : Promise.resolve(undefined);
         };
 
-        // Read msg, replyMsg, pinnedMsg lazily at call time
         ctx.mediaGroups = {
-            getMediaGroup: () => {
-                const msg = ctx.msg ?? ctx.message;
-                return getGroupFor(msg);
-            },
-            getMediaGroupForReply: () => {
-                const msg = ctx.msg ?? ctx.message;
-                const reply =
-                    msg && "reply_to_message" in msg
-                        ? msg.reply_to_message
-                        : undefined;
-                return getGroupFor(reply);
-            },
-            getMediaGroupForPinned: () => {
-                const msg = ctx.msg ?? ctx.message;
-                const pinned =
-                    msg && "pinned_message" in msg
-                        ? msg.pinned_message
-                        : undefined;
-                return getGroupFor(pinned);
-            },
+            getMediaGroup: () => getGroupFor(ctx.msg),
+            getMediaGroupForReply: () =>
+                getGroupFor(ctx.msg?.reply_to_message),
+            getMediaGroupForPinned: () =>
+                getGroupFor(ctx.msg?.pinned_message),
             store,
         };
 
         if (autoStore) {
-            const msg = ctx.msg ?? ctx.message;
-            const replyMsg =
-                msg && "reply_to_message" in msg
-                    ? msg.reply_to_message
-                    : undefined;
-            const pinnedMsg =
-                msg && "pinned_message" in msg
-                    ? msg.pinned_message
-                    : undefined;
+            const msg = ctx.msg;
+            const replyMsg = msg?.reply_to_message;
+            const pinnedMsg = msg?.pinned_message;
 
             // Collect messages to store in batch
             const toStore: Message[] = [];
