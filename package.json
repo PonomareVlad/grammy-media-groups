@@ -1,6 +1,6 @@
 {
     "name": "grammy-media-groups",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Media Groups Storage Plugin for grammY",
     "homepage": "https://github.com/PonomareVlad/grammy-media-groups",
     "main": "./out/mod.js",
