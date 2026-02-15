@@ -21,6 +21,8 @@ jobs:
               with:
                   node-version: lts/*
 
+            - run: npm install
+
             - run: npm version patch
 
             - run: npm publish
