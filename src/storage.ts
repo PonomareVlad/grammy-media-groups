@@ -93,7 +93,8 @@ export interface ToInputMediaOptions {
     caption_entities?: MessageEntity[];
     /**
      * Show caption above the media.
-     * Only applied when `caption` is provided (first item).
+     * Applied to all photo and video items for consistency.
+     * When not set, the value from the original messages is used.
      */
     show_caption_above_media?: boolean;
     /** Mark media as containing a spoiler (applies to all photo and video items). */
@@ -109,9 +110,9 @@ export interface ToInputMediaOptions {
  * Unsupported message types (e.g. animation) are silently skipped.
  *
  * @param messages Array of messages belonging to a media group
- * @param options  Optional overrides: caption, parse_mode, caption_entities,
- *                 show_caption_above_media (all first item only when caption is set),
- *                 has_spoiler (all photo/video items)
+ * @param options  Optional overrides: caption, parse_mode, caption_entities
+ *                 (all first item only when caption is set),
+ *                 show_caption_above_media, has_spoiler (all photo/video items)
  * @returns An array of `MediaGroupInputMedia` objects ready to be sent
  *
  * @example
@@ -139,6 +140,9 @@ export function toInputMedia(
     options: ToInputMediaOptions = {},
 ): MediaGroupInputMedia[] {
     const { has_spoiler } = options;
+    const show_caption_above_media = options.show_caption_above_media ??
+        messages.find((m) => m.show_caption_above_media)
+            ?.show_caption_above_media;
     return messages.map((msg, i): MediaGroupInputMedia | undefined => {
         const hasCaption = options.caption !== undefined && i === 0;
         const base = {
@@ -147,11 +151,8 @@ export function toInputMedia(
             caption_entities: hasCaption
                 ? options.caption_entities
                 : msg.caption_entities,
-            show_caption_above_media: hasCaption
-                ? options.show_caption_above_media
-                : msg.show_caption_above_media,
         };
-        const visual = { ...base, has_spoiler };
+        const visual = { ...base, show_caption_above_media, has_spoiler };
         switch (true) {
             case "photo" in msg:
                 return InputMediaBuilder.photo(
