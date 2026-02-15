@@ -13,24 +13,16 @@ jobs:
     publish:
         runs-on: ubuntu-latest
         steps:
-            - name: Setup repo
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
-            - name: Setup Deno
-              uses: denoland/setup-deno@v2
-              with:
-                  deno-version: v2.x
+            - uses: denoland/setup-deno@v2
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: lts/*
 
-            - name: Version patch
-              run: npm version patch
+            - run: npm version patch
 
-            - name: Publish
-              run: npm publish
+            - run: npm publish
 
-            - name: Push version tag
-              run: git push --tags
+            - run: git push --tags
