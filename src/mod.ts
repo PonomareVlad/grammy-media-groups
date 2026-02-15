@@ -1,4 +1,4 @@
-import type { Message } from "./deps.deno.ts";
+import type { InputMedia, Message } from "./deps.deno.ts";
 import {
     Composer,
     Context,
@@ -6,9 +6,15 @@ import {
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
-import { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
+import { MEDIA_GROUP_METHODS, storeMessages, toInputMedia } from "./storage.ts";
+import type { ToInputMediaOptions } from "./storage.ts";
 
-export { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
+export {
+    MEDIA_GROUP_METHODS,
+    storeMessages,
+    toInputMedia,
+    type ToInputMediaOptions,
+} from "./storage.ts";
 
 /**
  * Options for the media groups plugin.
@@ -61,6 +67,21 @@ export type MediaGroupsFlavor = {
          * @param mediaGroupId The media group ID to delete
          */
         delete: (mediaGroupId: string) => Promise<void>;
+        /**
+         * Converts an array of media group messages into `InputMedia[]`
+         * suitable for `sendMediaGroup`. Supports photo, video, document,
+         * audio and animation messages (animations are mapped to video).
+         *
+         * @param messages Array of messages belonging to a media group
+         * @param options Optional overrides: caption, parse_mode, caption_entities,
+         *     show_caption_above_media (first item only when caption is set),
+         *     has_spoiler (all photo/video items)
+         * @returns An array of `InputMedia` objects ready to be sent
+         */
+        toInputMedia: (
+            messages: Message[],
+            options?: ToInputMediaOptions,
+        ) => InputMedia[];
     };
 };
 
@@ -104,11 +125,11 @@ export function mediaGroupTransformer(
  *
  * @example
  * ```typescript
- * import { Bot, Context, InputMediaBuilder } from "grammy";
+ * import { Bot, Context, InlineKeyboard } from "grammy";
  * import {
  *     type MediaGroupsFlavor,
  *     mediaGroups,
- * } from "@grammyjs/media-groups";
+ * } from "grammy-media-groups";
  *
  * type MyContext = Context & MediaGroupsFlavor;
  *
@@ -129,36 +150,31 @@ export function mediaGroupTransformer(
  *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
- *             group
- *                 .map((msg) => {
- *                     const opts = {
- *                         caption: msg.caption,
- *                         caption_entities: msg.caption_entities,
- *                     };
- *                     switch (true) {
- *                         case "photo" in msg: {
- *                             const id = msg.photo?.at(-1)?.file_id;
- *                             return InputMediaBuilder.photo(id, opts);
- *                         }
- *                         case "video" in msg: {
- *                             const id = msg.video?.file_id;
- *                             return InputMediaBuilder.video(id, opts);
- *                         }
- *                         case "document" in msg: {
- *                             const id = msg.document?.file_id;
- *                             return InputMediaBuilder.document(id, opts);
- *                         }
- *                     }
- *                 })
- *                 .filter(Boolean),
+ *             ctx.mediaGroups.toInputMedia(group),
  *         );
  *     }
  * });
  *
- * // Access media group of current message via namespace
+ * // Reply once when the first message of a media group arrives
  * bot.on("message", async (ctx) => {
  *     const group = await ctx.mediaGroups.getForMsg();
- *     if (group) console.log(`Album has ${group.length} items`);
+ *     if (group?.length === 1) {
+ *         await ctx.reply("Media group detected", {
+ *             reply_parameters: { message_id: ctx.msg.message_id },
+ *             reply_markup: new InlineKeyboard().text("Resend album", "resend"),
+ *         });
+ *     }
+ * });
+ *
+ * // Handle inline keyboard button to resend a media group
+ * bot.on("callback_query:data", async (ctx) => {
+ *     const group = await ctx.mediaGroups.getForReply();
+ *     if (group) {
+ *         await ctx.replyWithMediaGroup(
+ *             ctx.mediaGroups.toInputMedia(group),
+ *         );
+ *     }
+ *     await ctx.answerCallbackQuery();
  * });
  * ```
  *
@@ -234,6 +250,7 @@ export function mediaGroups(
             getForPinned: () => getGroupFor(ctx.msg?.pinned_message),
             store,
             delete: deleteMediaGroup,
+            toInputMedia,
         };
 
         if (autoStore) {

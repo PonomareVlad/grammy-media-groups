@@ -2,8 +2,15 @@ export {
     Api,
     Composer,
     Context,
+    InputMediaBuilder,
     MemorySessionStorage,
     type StorageAdapter,
     type Transformer,
 } from "grammy";
-export type { Message, UserFromGetMe } from "grammy/types";
+export type {
+    InputMedia,
+    Message,
+    MessageEntity,
+    ParseMode,
+    UserFromGetMe,
+} from "grammy/types";

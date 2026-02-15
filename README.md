@@ -22,6 +22,10 @@ outgoing API responses, and lets you retrieve the full group at any time.
   and use `ctx.mediaGroups.store(message)` for full control.
 - **Delete** — `ctx.mediaGroups.delete(mediaGroupId)` or
   `mg.deleteMediaGroup(mediaGroupId)` removes a media group from storage.
+- **Convert** — `toInputMedia(messages)` or
+  `ctx.mediaGroups.toInputMedia(messages)` converts stored messages into
+  `InputMedia[]` ready for `sendMediaGroup`. Supports photo, video, document,
+  audio and animation, with optional caption/parse_mode override.
 
 ## Installation
 
@@ -37,14 +41,15 @@ npm install github:PonomareVlad/grammy-media-groups
 import {
     mediaGroups,
     type MediaGroupsFlavor,
+    toInputMedia,
 } from "https://raw.githubusercontent.com/PonomareVlad/grammy-media-groups/main/src/mod.ts";
 ```
 
 ## Usage
 
 ```typescript
-import { Bot, Context, InputMediaBuilder } from "grammy";
-import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
+import { Bot, Context, InlineKeyboard } from "grammy";
+import { mediaGroups, type MediaGroupsFlavor } from "grammy-media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
 
@@ -57,11 +62,14 @@ bot.use(mg);
 // Install transformer for outgoing API responses
 bot.api.config.use(mg.transformer);
 
-// Retrieve the media group of the current message
+// Reply once when the first message of a media group arrives
 bot.on("message", async (ctx) => {
     const group = await ctx.mediaGroups.getForMsg();
-    if (group) {
-        console.log(`Media group has ${group.length} messages`);
+    if (group?.length === 1) {
+        await ctx.reply("Media group detected", {
+            reply_parameters: { message_id: ctx.msg.message_id },
+            reply_markup: new InlineKeyboard().text("Resend album", "resend"),
+        });
     }
 });
 
@@ -70,30 +78,20 @@ bot.command("album", async (ctx) => {
     const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
-            group
-                .map((msg) => {
-                    const opts = {
-                        caption: msg.caption,
-                        caption_entities: msg.caption_entities,
-                    };
-                    switch (true) {
-                        case "photo" in msg: {
-                            const id = msg.photo?.at(-1)?.file_id;
-                            return InputMediaBuilder.photo(id, opts);
-                        }
-                        case "video" in msg: {
-                            const id = msg.video?.file_id;
-                            return InputMediaBuilder.video(id, opts);
-                        }
-                        case "document" in msg: {
-                            const id = msg.document?.file_id;
-                            return InputMediaBuilder.document(id, opts);
-                        }
-                    }
-                })
-                .filter(Boolean),
+            ctx.mediaGroups.toInputMedia(group),
         );
     }
+});
+
+// Handle inline keyboard button to resend a media group
+bot.on("callback_query:data", async (ctx) => {
+    const group = await ctx.mediaGroups.getForReply();
+    if (group) {
+        await ctx.replyWithMediaGroup(
+            ctx.mediaGroups.toInputMedia(group),
+        );
+    }
+    await ctx.answerCallbackQuery();
 });
 
 // Programmatic access outside middleware

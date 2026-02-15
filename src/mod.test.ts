@@ -386,3 +386,39 @@ Deno.test(
         assertEquals(after, undefined);
     },
 );
+
+Deno.test(
+    "ctx.mediaGroups.toInputMedia is available and works",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        const photoMsg = msg(1, 100, "g13", {
+            photo: [{
+                file_id: "ph1",
+                file_unique_id: "p1",
+                width: 800,
+                height: 600,
+            }],
+            caption: "Test",
+        });
+
+        // Pre-populate storage with the full photo message
+        await adapter.write("g13", [photoMsg]);
+
+        const ctx = createCtx({
+            update_id: 1,
+            message: photoMsg,
+        });
+
+        await mg.middleware()(ctx, async () => {
+            const group = await ctx.mediaGroups.getForMsg();
+            assertEquals(group?.length, 1);
+            const media = ctx.mediaGroups.toInputMedia(group!);
+            assertEquals(media.length, 1);
+            assertEquals(media[0].type, "photo");
+            assertEquals(media[0].media, "ph1");
+            assertEquals(media[0].caption, "Test");
+        });
+    },
+);

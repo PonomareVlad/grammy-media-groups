@@ -1,4 +1,10 @@
-import type { Message, StorageAdapter } from "./deps.deno.ts";
+import { InputMediaBuilder, type StorageAdapter } from "./deps.deno.ts";
+import type {
+    InputMedia,
+    Message,
+    MessageEntity,
+    ParseMode,
+} from "./deps.deno.ts";
 
 /** Wraps a single Message in an array. */
 const toArray = (result: Message): Message[] => [result];
@@ -54,4 +60,99 @@ export async function storeMessages(
     await Promise.all(
         Object.entries(groups).map(([key, value]) => adapter.write(key, value)),
     );
+}
+
+/**
+ * Options for {@link toInputMedia}.
+ */
+export interface ToInputMediaOptions {
+    /** Override caption on the first item of the media group. */
+    caption?: string;
+    /**
+     * Text formatting mode for the overridden caption.
+     * Only applied when `caption` is provided.
+     */
+    parse_mode?: ParseMode;
+    /**
+     * Entities for the overridden caption.
+     * Only applied when `caption` is provided.
+     */
+    caption_entities?: MessageEntity[];
+    /**
+     * Show caption above the media.
+     * Only applied when `caption` is provided (first item).
+     */
+    show_caption_above_media?: boolean;
+    /** Mark media as containing a spoiler (applies to all photo and video items). */
+    has_spoiler?: boolean;
+}
+
+/**
+ * Converts an array of media group messages into an `InputMedia[]` array
+ * suitable for {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
+ *
+ * Supports photo, video, document, audio and animation messages.
+ * Animations are mapped to `"video"` since `sendMediaGroup` does not
+ * accept `"animation"` as an input media type.
+ *
+ * @param messages Array of messages belonging to a media group
+ * @param options  Optional overrides: caption, parse_mode, caption_entities,
+ *                 show_caption_above_media (all first item only when caption is set),
+ *                 has_spoiler (all photo/video items)
+ * @returns An array of `InputMedia` objects ready to be sent
+ *
+ * @example
+ * ```typescript
+ * const group = await ctx.mediaGroups.getForReply();
+ * if (group) {
+ *     await ctx.replyWithMediaGroup(toInputMedia(group));
+ * }
+ * ```
+ *
+ * @example With caption override:
+ * ```typescript
+ * const group = await ctx.mediaGroups.getForReply();
+ * if (group) {
+ *     const media = toInputMedia(group, {
+ *         caption: "<b>Forwarded album</b>",
+ *         parse_mode: "HTML",
+ *     });
+ *     await ctx.replyWithMediaGroup(media);
+ * }
+ * ```
+ */
+export function toInputMedia(
+    messages: Message[],
+    options: ToInputMediaOptions = {},
+): InputMedia[] {
+    const { has_spoiler } = options;
+    return messages.map((msg, i): InputMedia | undefined => {
+        const hasCaption = options.caption !== undefined && i === 0;
+        const base = {
+            caption: hasCaption ? options.caption : msg.caption,
+            parse_mode: hasCaption ? options.parse_mode : undefined,
+            caption_entities: hasCaption
+                ? options.caption_entities
+                : msg.caption_entities,
+            show_caption_above_media: hasCaption
+                ? options.show_caption_above_media
+                : msg.show_caption_above_media,
+        };
+        const visual = { ...base, has_spoiler };
+        switch (true) {
+            case "photo" in msg:
+                return InputMediaBuilder.photo(
+                    msg.photo!.at(-1)!.file_id,
+                    visual,
+                );
+            case "video" in msg:
+                return InputMediaBuilder.video(msg.video!.file_id, visual);
+            case "animation" in msg:
+                return InputMediaBuilder.video(msg.animation!.file_id, visual);
+            case "document" in msg:
+                return InputMediaBuilder.document(msg.document!.file_id, base);
+            case "audio" in msg:
+                return InputMediaBuilder.audio(msg.audio!.file_id, base);
+        }
+    }).filter(Boolean) as InputMedia[];
 }
