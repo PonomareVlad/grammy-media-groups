@@ -101,18 +101,18 @@ export interface ToInputMediaOptions {
 }
 
 /**
- * Converts an array of media group messages into an `InputMedia[]` array
- * suitable for {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
+ * Converts an array of media group messages into a `MediaGroupInputMedia[]`
+ * array suitable for
+ * {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
  *
- * Supports photo, video, document, audio and animation messages.
- * Animations are mapped to `"video"` since `sendMediaGroup` does not
- * accept `"animation"` as an input media type.
+ * Supports photo, video, document and audio messages.
+ * Unsupported message types (e.g. animation) are silently skipped.
  *
  * @param messages Array of messages belonging to a media group
  * @param options  Optional overrides: caption, parse_mode, caption_entities,
  *                 show_caption_above_media (all first item only when caption is set),
  *                 has_spoiler (all photo/video items)
- * @returns An array of `InputMedia` objects ready to be sent
+ * @returns An array of `MediaGroupInputMedia` objects ready to be sent
  *
  * @example
  * ```typescript
@@ -160,8 +160,6 @@ export function toInputMedia(
                 );
             case "video" in msg:
                 return InputMediaBuilder.video(msg.video!.file_id, visual);
-            case "animation" in msg:
-                return InputMediaBuilder.video(msg.animation!.file_id, visual);
             case "document" in msg:
                 return InputMediaBuilder.document(msg.document!.file_id, base);
             case "audio" in msg:

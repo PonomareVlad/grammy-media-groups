@@ -74,15 +74,16 @@ export type MediaGroupsFlavor = {
          */
         delete: (mediaGroupId: string) => Promise<void>;
         /**
-         * Converts an array of media group messages into `InputMedia[]`
-         * suitable for `sendMediaGroup`. Supports photo, video, document,
-         * audio and animation messages (animations are mapped to video).
+         * Converts an array of media group messages into
+         * `MediaGroupInputMedia[]` suitable for `sendMediaGroup`.
+         * Supports photo, video, document and audio messages.
+         * Unsupported types are silently skipped.
          *
          * @param messages Array of messages belonging to a media group
          * @param options Optional overrides: caption, parse_mode, caption_entities,
          *     show_caption_above_media (first item only when caption is set),
          *     has_spoiler (all photo/video items)
-         * @returns An array of `InputMedia` objects ready to be sent
+         * @returns An array of `MediaGroupInputMedia` objects ready to be sent
          */
         toInputMedia: (
             messages: Message[],
