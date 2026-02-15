@@ -165,37 +165,38 @@ function toInputMedia(
                 : msg.caption_entities,
         };
         if ("photo" in msg) {
+            const photo = msg.photo;
             return {
                 type: "photo" as const,
-                media: msg.photo![msg.photo!.length - 1].file_id,
+                media: photo?.[photo.length - 1]?.file_id ?? "",
                 ...base,
             };
         }
         if ("video" in msg) {
             return {
                 type: "video" as const,
-                media: msg.video!.file_id,
+                media: msg.video?.file_id ?? "",
                 ...base,
             };
         }
         if ("document" in msg) {
             return {
                 type: "document" as const,
-                media: msg.document!.file_id,
+                media: msg.document?.file_id ?? "",
                 ...base,
             };
         }
         if ("audio" in msg) {
             return {
                 type: "audio" as const,
-                media: msg.audio!.file_id,
+                media: msg.audio?.file_id ?? "",
                 ...base,
             };
         }
         if ("animation" in msg) {
             return {
                 type: "animation" as const,
-                media: msg.animation!.file_id,
+                media: msg.animation?.file_id ?? "",
                 ...base,
             };
         }
