@@ -66,8 +66,13 @@ bot.api.config.use(mg.transformer);
 bot.on("message", async (ctx) => {
     const group = await ctx.mediaGroups.getForMsg();
     if (group?.length === 1) {
-        await ctx.reply("send /album", {
-            reply_markup: { force_reply: true },
+        await ctx.reply("Media group detected", {
+            reply_markup: {
+                inline_keyboard: [[{
+                    text: "Resend album",
+                    callback_data: `album:${ctx.msg.media_group_id}`,
+                }]],
+            },
         });
     }
 });
@@ -82,17 +87,17 @@ bot.command("album", async (ctx) => {
     }
 });
 
-// Resend with a custom caption
-bot.command("copy", async (ctx) => {
-    const group = await ctx.mediaGroups.getForReply();
+// Handle inline keyboard button to resend a media group
+bot.on("callback_query:data", async (ctx) => {
+    const match = ctx.callbackQuery.data.match(/^album:(.+)$/);
+    if (!match) return;
+    const group = await mg.getMediaGroup(match[1]);
     if (group) {
         await ctx.replyWithMediaGroup(
-            ctx.mediaGroups.toInputMedia(group, {
-                caption: "<b>Forwarded album</b>",
-                parse_mode: "HTML",
-            }),
+            ctx.mediaGroups.toInputMedia(group),
         );
     }
+    await ctx.answerCallbackQuery();
 });
 
 // Programmatic access outside middleware

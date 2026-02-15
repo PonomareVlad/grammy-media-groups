@@ -2,6 +2,7 @@ export {
     Api,
     Composer,
     Context,
+    InputMediaBuilder,
     MemorySessionStorage,
     type StorageAdapter,
     type Transformer,

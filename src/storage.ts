@@ -1,9 +1,9 @@
+import { InputMediaBuilder, type StorageAdapter } from "./deps.deno.ts";
 import type {
     InputMedia,
     Message,
     MessageEntity,
     ParseMode,
-    StorageAdapter,
 } from "./deps.deno.ts";
 
 /** Wraps a single Message in an array. */
@@ -119,41 +119,19 @@ export function toInputMedia(
                 ? options.caption_entities
                 : msg.caption_entities,
         };
-        if ("photo" in msg && msg.photo) {
-            return {
-                type: "photo" as const,
-                media: msg.photo.at(-1)!.file_id,
-                ...base,
-            };
+        switch (true) {
+            case "photo" in msg && !!msg.photo:
+                return InputMediaBuilder.photo(msg.photo.at(-1)!.file_id, base);
+            case "video" in msg && !!msg.video:
+                return InputMediaBuilder.video(msg.video.file_id, base);
+            case "animation" in msg && !!msg.animation:
+                return InputMediaBuilder.video(msg.animation.file_id, base);
+            case "document" in msg && !!msg.document:
+                return InputMediaBuilder.document(msg.document.file_id, base);
+            case "audio" in msg && !!msg.audio:
+                return InputMediaBuilder.audio(msg.audio.file_id, base);
+            default:
+                return [];
         }
-        if ("video" in msg && msg.video) {
-            return {
-                type: "video" as const,
-                media: msg.video.file_id,
-                ...base,
-            };
-        }
-        if ("animation" in msg && msg.animation) {
-            return {
-                type: "video" as const,
-                media: msg.animation.file_id,
-                ...base,
-            };
-        }
-        if ("document" in msg && msg.document) {
-            return {
-                type: "document" as const,
-                media: msg.document.file_id,
-                ...base,
-            };
-        }
-        if ("audio" in msg && msg.audio) {
-            return {
-                type: "audio" as const,
-                media: msg.audio.file_id,
-                ...base,
-            };
-        }
-        return [];
     });
 }
