@@ -57,7 +57,7 @@ Deno.test(
         const stored = await adapter.read("g1");
         assertEquals(stored?.length, 1);
         assertEquals(
-            (stored?.[0] as unknown as Record<string, unknown>).text,
+            (stored?.[0] as unknown as unknown as Record<string, unknown>).text,
             "new",
         );
     },
@@ -153,7 +153,7 @@ Deno.test("storeMessages replaces existing messages in batch", async () => {
     const stored = await adapter.read("g1");
     assertEquals(stored?.length, 2);
     assertEquals(
-        (stored?.[0] as unknown as Record<string, unknown>).text,
+        (stored?.[0] as unknown as unknown as Record<string, unknown>).text,
         "new",
     );
     assertEquals(stored?.[1].message_id, 2);
@@ -338,4 +338,93 @@ Deno.test("toInputMedia skips unsupported message types", () => {
     const messages = [msg(1, 100, "g1", { text: "just text" })];
     const result = toInputMedia(messages);
     assertEquals(result, []);
+});
+
+Deno.test("toInputMedia applies parse_mode with caption override", () => {
+    const messages = [
+        msg(1, 100, "g1", {
+            photo: [{
+                file_id: "ph1",
+                file_unique_id: "p1",
+                width: 800,
+                height: 600,
+            }],
+        }),
+    ];
+    const result = toInputMedia(messages, {
+        caption: "<b>Bold</b>",
+        parse_mode: "HTML",
+    });
+    assertEquals(result[0].caption, "<b>Bold</b>");
+    assertEquals(result[0].parse_mode, "HTML");
+});
+
+Deno.test(
+    "toInputMedia applies show_caption_above_media only with caption",
+    () => {
+        const messages = [
+            msg(1, 100, "g1", {
+                photo: [{
+                    file_id: "ph1",
+                    file_unique_id: "p1",
+                    width: 800,
+                    height: 600,
+                }],
+                caption: "Original",
+            }),
+            msg(2, 100, "g1", {
+                photo: [{
+                    file_id: "ph2",
+                    file_unique_id: "p2",
+                    width: 800,
+                    height: 600,
+                }],
+            }),
+        ];
+        const result = toInputMedia(messages, {
+            caption: "New",
+            show_caption_above_media: true,
+        });
+        assertEquals(
+            (result[0] as unknown as Record<string, unknown>)
+                .show_caption_above_media,
+            true,
+        );
+        assertEquals(
+            (result[1] as unknown as Record<string, unknown>)
+                .show_caption_above_media,
+            undefined,
+        );
+    },
+);
+
+Deno.test("toInputMedia applies has_spoiler to all photo/video items", () => {
+    const messages = [
+        msg(1, 100, "g1", {
+            photo: [{
+                file_id: "ph1",
+                file_unique_id: "p1",
+                width: 800,
+                height: 600,
+            }],
+        }),
+        msg(2, 100, "g1", {
+            video: {
+                file_id: "vid1",
+                file_unique_id: "v1",
+                width: 1920,
+                height: 1080,
+                duration: 30,
+            },
+        }),
+    ];
+    const result = toInputMedia(messages, { has_spoiler: true });
+    assertEquals(
+        (result[0] as unknown as Record<string, unknown>).has_spoiler,
+        true,
+    );
+    assertEquals(
+        (result[1] as unknown as Record<string, unknown>).has_spoiler,
+        true,
+    );
 });
