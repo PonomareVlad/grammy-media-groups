@@ -55,6 +55,12 @@ export type MediaGroupsFlavor = {
          * @param message The message to store
          */
         store: (message: Message) => Promise<void>;
+        /**
+         * Deletes a media group from storage by its ID.
+         *
+         * @param mediaGroupId The media group ID to delete
+         */
+        delete: (mediaGroupId: string) => Promise<void>;
     };
 };
 
@@ -167,6 +173,15 @@ export function mediaGroupTransformer(
  *     }
  * });
  * ```
+ *
+ * @example Deleting a media group from storage:
+ * ```typescript
+ * // From within middleware
+ * await ctx.mediaGroups.delete("some-media-group-id");
+ *
+ * // From outside middleware
+ * await mg.deleteMediaGroup("some-media-group-id");
+ * ```
  */
 export function mediaGroups(
     adapter: StorageAdapter<Message[]> = new MemorySessionStorage<Message[]>(),
@@ -184,6 +199,12 @@ export function mediaGroups(
      * @returns Array of messages in the media group, or `undefined` if not found
      */
     getMediaGroup: (mediaGroupId: string) => Promise<Message[] | undefined>;
+    /**
+     * Deletes a media group from storage by its ID.
+     *
+     * @param mediaGroupId The media group ID to delete
+     */
+    deleteMediaGroup: (mediaGroupId: string) => Promise<void>;
 } {
     const { autoStore = true } = options;
     const composer = new Composer<MediaGroupsContext>();
@@ -195,6 +216,9 @@ export function mediaGroups(
     };
 
     const store = (message: Message) => storeMessages(adapter, [message]);
+
+    const deleteMediaGroup = (mediaGroupId: string) =>
+        adapter.delete(mediaGroupId);
 
     // Hydrate context and store incoming messages
     composer.use(async (ctx, next) => {
@@ -211,6 +235,7 @@ export function mediaGroups(
             getMediaGroupForPinned: () =>
                 getGroupFor(ctx.msg?.pinned_message),
             store,
+            delete: deleteMediaGroup,
         };
 
         if (autoStore) {
@@ -238,10 +263,12 @@ export function mediaGroups(
         // deno-lint-ignore no-explicit-any
         transformer: Transformer<any>;
         getMediaGroup: (mediaGroupId: string) => Promise<Message[] | undefined>;
+        deleteMediaGroup: (mediaGroupId: string) => Promise<void>;
     };
     result.adapter = adapter;
     result.transformer = mediaGroupTransformer(adapter);
     result.getMediaGroup = getMediaGroup;
+    result.deleteMediaGroup = deleteMediaGroup;
 
     return result;
 }

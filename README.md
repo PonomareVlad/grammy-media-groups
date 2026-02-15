@@ -20,6 +20,8 @@ outgoing API responses, and lets you retrieve the full group at any time.
   `getMediaGroup(mediaGroupId)` for use outside of middleware.
 - **Manual mode** — pass `{ autoStore: false }` to disable automatic storing
   and use `ctx.mediaGroups.store(message)` for full control.
+- **Delete** — `ctx.mediaGroups.delete(mediaGroupId)` or
+  `mg.deleteMediaGroup(mediaGroupId)` removes a media group from storage.
 
 ## Installation
 
@@ -122,5 +124,11 @@ bot.on("message", async (ctx) => {
     if (reply?.media_group_id) {
         await ctx.mediaGroups.store(reply);
     }
+
+    // Delete a media group when no longer needed
+    // await ctx.mediaGroups.delete("some-media-group-id");
 });
+
+// Delete from outside middleware
+// await mg.deleteMediaGroup("some-media-group-id");
 ```

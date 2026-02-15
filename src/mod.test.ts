@@ -335,3 +335,54 @@ Deno.test(
         });
     },
 );
+
+Deno.test(
+    "ctx.mediaGroups.delete() removes a media group from storage",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        // Pre-populate storage
+        await adapter.write("g11", [msg(1, 100, "g11"), msg(2, 100, "g11")]);
+
+        const ctx = createCtx({
+            update_id: 1,
+            message: msg(1, 100, "g11"),
+        });
+
+        await mg.middleware()(ctx, async () => {
+            // Verify group exists
+            const group = await ctx.mediaGroups.getMediaGroup();
+            assertEquals(group?.length, 2);
+
+            // Delete it
+            await ctx.mediaGroups.delete("g11");
+
+            // Verify it's gone
+            const deleted = await ctx.mediaGroups.getMediaGroup();
+            assertEquals(deleted, undefined);
+        });
+    },
+);
+
+Deno.test(
+    "mg.deleteMediaGroup() removes a media group from storage",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        // Pre-populate storage
+        await adapter.write("g12", [msg(1, 100, "g12"), msg(2, 100, "g12")]);
+
+        // Verify group exists
+        const before = await mg.getMediaGroup("g12");
+        assertEquals(before?.length, 2);
+
+        // Delete it
+        await mg.deleteMediaGroup("g12");
+
+        // Verify it's gone
+        const after = await mg.getMediaGroup("g12");
+        assertEquals(after, undefined);
+    },
+);
