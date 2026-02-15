@@ -9,6 +9,7 @@ export {
 export type {
     InputMedia,
     Message,
+    MessageEntity,
     ParseMode,
     UserFromGetMe,
 } from "https://lib.deno.dev/x/grammy@v1/types.ts";

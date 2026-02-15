@@ -49,7 +49,7 @@ import {
 
 ```typescript
 import { Bot, Context } from "grammy";
-import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
+import { mediaGroups, type MediaGroupsFlavor } from "grammy-media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
 

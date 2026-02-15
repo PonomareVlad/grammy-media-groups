@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import type { Message } from "./deps.deno.ts";
 import { MemorySessionStorage } from "./deps.deno.ts";
 import {
@@ -237,7 +237,7 @@ Deno.test("copyMediaGroup converts audio messages", () => {
     assertEquals(result[0].media, "aud1");
 });
 
-Deno.test("copyMediaGroup converts animation messages", () => {
+Deno.test("copyMediaGroup converts animation messages as video", () => {
     const messages = [
         msg(1, 100, "g1", {
             animation: {
@@ -251,7 +251,7 @@ Deno.test("copyMediaGroup converts animation messages", () => {
     ];
     const result = copyMediaGroup(messages);
     assertEquals(result.length, 1);
-    assertEquals(result[0].type, "animation");
+    assertEquals(result[0].type, "video");
     assertEquals(result[0].media, "anim1");
 });
 
@@ -302,13 +302,15 @@ Deno.test("copyMediaGroup overrides caption on first item", () => {
             caption: "Original caption 2",
         }),
     ];
+    const entities = [{ type: "bold" as const, offset: 0, length: 3 }];
     const result = copyMediaGroup(messages, {
         caption: "New caption",
         parse_mode: "HTML",
+        caption_entities: entities,
     });
     assertEquals(result[0].caption, "New caption");
     assertEquals(result[0].parse_mode, "HTML");
-    assertEquals(result[0].caption_entities, undefined);
+    assertEquals(result[0].caption_entities, entities);
     assertEquals(result[1].caption, "Original caption 2");
     assertEquals(result[1].parse_mode, undefined);
 });
@@ -335,4 +337,13 @@ Deno.test("copyMediaGroup preserves caption_entities without override", () => {
 Deno.test("copyMediaGroup returns empty array for empty input", () => {
     const result = copyMediaGroup([]);
     assertEquals(result, []);
+});
+
+Deno.test("copyMediaGroup throws for unsupported message type", () => {
+    const messages = [msg(1, 100, "g1", { text: "just text" })];
+    assertThrows(
+        () => copyMediaGroup(messages),
+        Error,
+        "unsupported message type",
+    );
 });

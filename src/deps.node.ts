@@ -9,6 +9,7 @@ export {
 export type {
     InputMedia,
     Message,
+    MessageEntity,
     ParseMode,
     UserFromGetMe,
 } from "grammy/types";

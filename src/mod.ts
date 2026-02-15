@@ -74,10 +74,10 @@ export type MediaGroupsFlavor = {
         /**
          * Converts an array of media group messages into `InputMedia[]`
          * suitable for `sendMediaGroup`. Supports photo, video, document,
-         * audio and animation messages.
+         * audio and animation messages (animations are mapped to video).
          *
          * @param messages Array of messages belonging to a media group
-         * @param options Optional caption/parse_mode override applied to the first item
+         * @param options Optional caption/parse_mode/caption_entities override applied to the first item
          * @returns An array of `InputMedia` objects ready to be sent
          */
         copyMediaGroup: (
@@ -131,7 +131,7 @@ export function mediaGroupTransformer(
  * import {
  *     type MediaGroupsFlavor,
  *     mediaGroups,
- * } from "@grammyjs/media-groups";
+ * } from "grammy-media-groups";
  *
  * type MyContext = Context & MediaGroupsFlavor;
  *

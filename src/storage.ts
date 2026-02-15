@@ -1,6 +1,7 @@
 import type {
     InputMedia,
     Message,
+    MessageEntity,
     ParseMode,
     StorageAdapter,
 } from "./deps.deno.ts";
@@ -69,6 +70,8 @@ export interface CopyMediaGroupOptions {
     caption?: string;
     /** Text formatting mode for the overridden caption. */
     parse_mode?: ParseMode;
+    /** Entities for the overridden caption (used instead of `parse_mode`). */
+    caption_entities?: MessageEntity[];
 }
 
 /**
@@ -76,6 +79,8 @@ export interface CopyMediaGroupOptions {
  * suitable for {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
  *
  * Supports photo, video, document, audio and animation messages.
+ * Animations are mapped to `"video"` since `sendMediaGroup` does not
+ * accept `"animation"` as an input media type.
  *
  * @param messages Array of messages belonging to a media group
  * @param options  Optional caption/parse_mode override applied to the first item
@@ -111,7 +116,7 @@ export function copyMediaGroup(
             caption: overrideCaption ? options.caption : msg.caption,
             parse_mode: overrideCaption ? options.parse_mode : undefined,
             caption_entities: overrideCaption
-                ? undefined
+                ? options.caption_entities
                 : msg.caption_entities,
         };
         if ("photo" in msg && msg.photo) {
@@ -130,7 +135,7 @@ export function copyMediaGroup(
         }
         if ("animation" in msg && msg.animation) {
             return {
-                type: "animation" as const,
+                type: "video" as const,
                 media: msg.animation.file_id,
                 ...base,
             };
@@ -149,6 +154,8 @@ export function copyMediaGroup(
                 ...base,
             };
         }
-        return { type: "photo" as const, media: "", ...base };
+        throw new Error(
+            "copyMediaGroup: unsupported message type for media group copy",
+        );
     });
 }
