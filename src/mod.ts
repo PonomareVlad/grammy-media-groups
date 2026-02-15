@@ -81,8 +81,8 @@ export type MediaGroupsFlavor = {
          *
          * @param messages Array of messages belonging to a media group
          * @param options Optional overrides: caption, parse_mode, caption_entities,
-         *     show_caption_above_media (first item only when caption is set),
-         *     has_spoiler (all photo/video items)
+         *     (first item only when caption is set),
+         *     show_caption_above_media, has_spoiler (all photo/video items)
          * @returns An array of `MediaGroupInputMedia` objects ready to be sent
          */
         toInputMedia: (

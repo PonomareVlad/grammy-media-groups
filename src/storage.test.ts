@@ -353,7 +353,7 @@ Deno.test("toInputMedia applies parse_mode with caption override", () => {
 });
 
 Deno.test(
-    "toInputMedia applies show_caption_above_media only with caption",
+    "toInputMedia applies show_caption_above_media to all photo/video items",
     () => {
         const messages = [
             msg(1, 100, "g1", {
@@ -386,7 +386,44 @@ Deno.test(
         assertEquals(
             (result[1] as unknown as Record<string, unknown>)
                 .show_caption_above_media,
-            undefined,
+            true,
+        );
+    },
+);
+
+Deno.test(
+    "toInputMedia preserves consistent show_caption_above_media from messages",
+    () => {
+        const messages = [
+            msg(1, 100, "g1", {
+                photo: [{
+                    file_id: "ph1",
+                    file_unique_id: "p1",
+                    width: 800,
+                    height: 600,
+                }],
+                caption: "First",
+                show_caption_above_media: true,
+            }),
+            msg(2, 100, "g1", {
+                photo: [{
+                    file_id: "ph2",
+                    file_unique_id: "p2",
+                    width: 800,
+                    height: 600,
+                }],
+            }),
+        ];
+        const result = toInputMedia(messages);
+        assertEquals(
+            (result[0] as unknown as Record<string, unknown>)
+                .show_caption_above_media,
+            true,
+        );
+        assertEquals(
+            (result[1] as unknown as Record<string, unknown>)
+                .show_caption_above_media,
+            true,
         );
     },
 );
