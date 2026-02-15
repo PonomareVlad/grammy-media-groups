@@ -110,7 +110,7 @@ export function copyMediaGroup(
     messages: Message[],
     options: CopyMediaGroupOptions = {},
 ): InputMedia[] {
-    return messages.map((msg, i) => {
+    return messages.flatMap((msg, i) => {
         const overrideCaption = options.caption !== undefined && i === 0;
         const base = {
             caption: overrideCaption ? options.caption : msg.caption,
@@ -154,8 +154,6 @@ export function copyMediaGroup(
                 ...base,
             };
         }
-        throw new Error(
-            "copyMediaGroup: unsupported message type for media group copy",
-        );
+        return [];
     });
 }

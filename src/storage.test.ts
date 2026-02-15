@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import type { Message } from "./deps.deno.ts";
 import { MemorySessionStorage } from "./deps.deno.ts";
 import {
@@ -339,11 +339,8 @@ Deno.test("copyMediaGroup returns empty array for empty input", () => {
     assertEquals(result, []);
 });
 
-Deno.test("copyMediaGroup throws for unsupported message type", () => {
+Deno.test("copyMediaGroup skips unsupported message types", () => {
     const messages = [msg(1, 100, "g1", { text: "just text" })];
-    assertThrows(
-        () => copyMediaGroup(messages),
-        Error,
-        "unsupported message type",
-    );
+    const result = copyMediaGroup(messages);
+    assertEquals(result, []);
 });
