@@ -62,11 +62,13 @@ bot.use(mg);
 // Install transformer for outgoing API responses
 bot.api.config.use(mg.transformer);
 
-// Retrieve the media group of the current message
+// Prompt the user to send /album when a media group is detected
 bot.on("message", async (ctx) => {
     const group = await ctx.mediaGroups.getForMsg();
-    if (group) {
-        console.log(`Media group has ${group.length} messages`);
+    if (group?.length === 1) {
+        await ctx.reply("send /album", {
+            reply_markup: { force_reply: true },
+        });
     }
 });
 

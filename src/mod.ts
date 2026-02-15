@@ -173,7 +173,11 @@ export function mediaGroupTransformer(
  * // Access media group of current message via namespace
  * bot.on("message", async (ctx) => {
  *     const group = await ctx.mediaGroups.getForMsg();
- *     if (group) console.log(`Album has ${group.length} items`);
+ *     if (group?.length === 1) {
+ *         await ctx.reply("send /album", {
+ *             reply_markup: { force_reply: true },
+ *         });
+ *     }
  * });
  * ```
  *
