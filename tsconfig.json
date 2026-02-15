@@ -11,9 +11,8 @@
         "module": "commonjs",
         "outDir": "./out/",
         "skipLibCheck": true,
-        "target": "es2019"
+        "target": "es2020"
     },
-    "include": [
-        "src/"
-    ]
+    "include": ["src/"],
+    "exclude": ["src/*.test.ts"]
 }
