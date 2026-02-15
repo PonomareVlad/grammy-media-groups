@@ -233,24 +233,6 @@ Deno.test("toInputMedia converts audio messages", () => {
     assertEquals(result[0].media, "aud1");
 });
 
-Deno.test("toInputMedia converts animation messages as video", () => {
-    const messages = [
-        msg(1, 100, "g1", {
-            animation: {
-                file_id: "anim1",
-                file_unique_id: "an1",
-                width: 320,
-                height: 240,
-                duration: 5,
-            },
-        }),
-    ];
-    const result = toInputMedia(messages);
-    assertEquals(result.length, 1);
-    assertEquals(result[0].type, "video");
-    assertEquals(result[0].media, "anim1");
-});
-
 Deno.test("toInputMedia handles mixed media types", () => {
     const messages = [
         msg(1, 100, "g1", {
@@ -335,7 +317,18 @@ Deno.test("toInputMedia returns empty array for empty input", () => {
 });
 
 Deno.test("toInputMedia skips unsupported message types", () => {
-    const messages = [msg(1, 100, "g1", { text: "just text" })];
+    const messages = [
+        msg(1, 100, "g1", { text: "just text" }),
+        msg(2, 100, "g1", {
+            animation: {
+                file_id: "anim1",
+                file_unique_id: "an1",
+                width: 320,
+                height: 240,
+                duration: 5,
+            },
+        }),
+    ];
     const result = toInputMedia(messages);
     assertEquals(result, []);
 });

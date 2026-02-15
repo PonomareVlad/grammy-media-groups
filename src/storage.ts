@@ -1,10 +1,23 @@
 import { InputMediaBuilder, type StorageAdapter } from "./deps.deno.ts";
 import type {
-    InputMedia,
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
     Message,
     MessageEntity,
     ParseMode,
 } from "./deps.deno.ts";
+
+/**
+ * Union of `InputMedia` types accepted by
+ * {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
+ */
+export type MediaGroupInputMedia =
+    | InputMediaAudio
+    | InputMediaDocument
+    | InputMediaPhoto
+    | InputMediaVideo;
 
 /** Wraps a single Message in an array. */
 const toArray = (result: Message): Message[] => [result];
@@ -88,18 +101,18 @@ export interface ToInputMediaOptions {
 }
 
 /**
- * Converts an array of media group messages into an `InputMedia[]` array
- * suitable for {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
+ * Converts an array of media group messages into a `MediaGroupInputMedia[]`
+ * array suitable for
+ * {@link https://core.telegram.org/bots/api#sendmediagroup sendMediaGroup}.
  *
- * Supports photo, video, document, audio and animation messages.
- * Animations are mapped to `"video"` since `sendMediaGroup` does not
- * accept `"animation"` as an input media type.
+ * Supports photo, video, document and audio messages.
+ * Unsupported message types (e.g. animation) are silently skipped.
  *
  * @param messages Array of messages belonging to a media group
  * @param options  Optional overrides: caption, parse_mode, caption_entities,
  *                 show_caption_above_media (all first item only when caption is set),
  *                 has_spoiler (all photo/video items)
- * @returns An array of `InputMedia` objects ready to be sent
+ * @returns An array of `MediaGroupInputMedia` objects ready to be sent
  *
  * @example
  * ```typescript
@@ -124,9 +137,9 @@ export interface ToInputMediaOptions {
 export function toInputMedia(
     messages: Message[],
     options: ToInputMediaOptions = {},
-): InputMedia[] {
+): MediaGroupInputMedia[] {
     const { has_spoiler } = options;
-    return messages.map((msg, i): InputMedia | undefined => {
+    return messages.map((msg, i): MediaGroupInputMedia | undefined => {
         const hasCaption = options.caption !== undefined && i === 0;
         const base = {
             caption: hasCaption ? options.caption : msg.caption,
@@ -147,8 +160,6 @@ export function toInputMedia(
                 );
             case "video" in msg:
                 return InputMediaBuilder.video(msg.video!.file_id, visual);
-            case "animation" in msg:
-                return InputMediaBuilder.video(msg.animation!.file_id, visual);
             case "document" in msg:
                 return InputMediaBuilder.document(msg.document!.file_id, base);
             case "audio" in msg:
@@ -156,5 +167,5 @@ export function toInputMedia(
             default:
                 return undefined;
         }
-    }).filter(Boolean) as InputMedia[];
+    }).filter(Boolean) as MediaGroupInputMedia[];
 }

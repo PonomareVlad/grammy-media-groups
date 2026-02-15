@@ -9,6 +9,10 @@ export {
 } from "grammy";
 export type {
     InputMedia,
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
     Message,
     MessageEntity,
     ParseMode,
