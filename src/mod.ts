@@ -37,17 +37,17 @@ export type MediaGroupsFlavor = {
          * Gets all messages belonging to the current message's media group.
          * Returns `undefined` if the current message is not part of a media group.
          */
-        getMediaGroup: () => Promise<Message[] | undefined>;
+        getForMsg: () => Promise<Message[] | undefined>;
         /**
          * Gets the media group of the message being replied to.
          * Returns `undefined` if there is no reply or it is not part of a media group.
          */
-        getMediaGroupForReply: () => Promise<Message[] | undefined>;
+        getForReply: () => Promise<Message[] | undefined>;
         /**
          * Gets the media group of the pinned message.
          * Returns `undefined` if there is no pinned message or it is not part of a media group.
          */
-        getMediaGroupForPinned: () => Promise<Message[] | undefined>;
+        getForPinned: () => Promise<Message[] | undefined>;
         /**
          * Manually stores a message in its media group.
          * The message must have a `media_group_id` to be stored.
@@ -126,7 +126,7 @@ export function mediaGroupTransformer(
  *
  * // In a command handler replying to a media group message
  * bot.command("album", async (ctx) => {
- *     const group = await ctx.mediaGroups.getMediaGroupForReply();
+ *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
  *             group
@@ -157,7 +157,7 @@ export function mediaGroupTransformer(
  *
  * // Access media group of current message via namespace
  * bot.on("message", async (ctx) => {
- *     const group = await ctx.mediaGroups.getMediaGroup();
+ *     const group = await ctx.mediaGroups.getForMsg();
  *     if (group) console.log(`Album has ${group.length} items`);
  * });
  * ```
@@ -229,11 +229,9 @@ export function mediaGroups(
         };
 
         ctx.mediaGroups = {
-            getMediaGroup: () => getGroupFor(ctx.msg),
-            getMediaGroupForReply: () =>
-                getGroupFor(ctx.msg?.reply_to_message),
-            getMediaGroupForPinned: () =>
-                getGroupFor(ctx.msg?.pinned_message),
+            getForMsg: () => getGroupFor(ctx.msg),
+            getForReply: () => getGroupFor(ctx.msg?.reply_to_message),
+            getForPinned: () => getGroupFor(ctx.msg?.pinned_message),
             store,
             delete: deleteMediaGroup,
         };

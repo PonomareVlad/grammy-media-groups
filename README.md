@@ -12,10 +12,10 @@ outgoing API responses, and lets you retrieve the full group at any time.
 - **Transformer** — intercepts Telegram API responses (`sendMediaGroup`,
   `forwardMessage`, `editMessageMedia`, `editMessageCaption`,
   `editMessageReplyMarkup`) and stores returned messages.
-- **Context hydration** — adds `ctx.mediaGroups.getMediaGroup()` to fetch the
+- **Context hydration** — adds `ctx.mediaGroups.getForMsg()` to fetch the
   current message's media group.
-- **Reply/pinned helpers** — `ctx.mediaGroups.getMediaGroupForReply()` and
-  `ctx.mediaGroups.getMediaGroupForPinned()` for sub-messages.
+- **Reply/pinned helpers** — `ctx.mediaGroups.getForReply()` and
+  `ctx.mediaGroups.getForPinned()` for sub-messages.
 - **Programmatic access** — the returned composer exposes
   `getMediaGroup(mediaGroupId)` for use outside of middleware.
 - **Manual mode** — pass `{ autoStore: false }` to disable automatic storing
@@ -63,7 +63,7 @@ bot.api.config.use(mg.transformer);
 
 // Retrieve the media group of the current message
 bot.on("message", async (ctx) => {
-    const group = await ctx.mediaGroups.getMediaGroup();
+    const group = await ctx.mediaGroups.getForMsg();
     if (group) {
         console.log(`Media group has ${group.length} messages`);
     }
@@ -71,7 +71,7 @@ bot.on("message", async (ctx) => {
 
 // Reply to an album message with /album to resend the full media group
 bot.command("album", async (ctx) => {
-    const group = await ctx.mediaGroups.getMediaGroupForReply();
+    const group = await ctx.mediaGroups.getForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
             group

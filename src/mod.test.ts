@@ -54,7 +54,7 @@ Deno.test("mediaGroups exposes adapter on the composer", () => {
     assertEquals(mg.adapter, adapter);
 });
 
-Deno.test("middleware hydrates ctx.mediaGroups.getMediaGroup", async () => {
+Deno.test("middleware hydrates ctx.mediaGroups.getForMsg", async () => {
     const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
@@ -69,7 +69,7 @@ Deno.test("middleware hydrates ctx.mediaGroups.getMediaGroup", async () => {
     let called = false;
     await mg.middleware()(ctx, async () => {
         called = true;
-        const group = await ctx.mediaGroups.getMediaGroup();
+        const group = await ctx.mediaGroups.getForMsg();
         assertEquals(group?.length, 2);
     });
     assertEquals(called, true);
@@ -106,14 +106,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroup();
+            const group = await ctx.mediaGroups.getForMsg();
             assertEquals(group, undefined);
         });
     },
 );
 
 Deno.test(
-    "middleware provides getMediaGroupForReply for reply_to_message",
+    "middleware provides getForReply for reply_to_message",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -131,14 +131,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroupForReply();
+            const group = await ctx.mediaGroups.getForReply();
             assertEquals(group?.length, 2);
         });
     },
 );
 
 Deno.test(
-    "getMediaGroupForReply returns undefined without media_group_id",
+    "getForReply returns undefined without media_group_id",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -153,14 +153,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroupForReply();
+            const group = await ctx.mediaGroups.getForReply();
             assertEquals(group, undefined);
         });
     },
 );
 
 Deno.test(
-    "middleware provides getMediaGroupForPinned for pinned_message",
+    "middleware provides getForPinned for pinned_message",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -178,14 +178,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroupForPinned();
+            const group = await ctx.mediaGroups.getForPinned();
             assertEquals(group?.length, 2);
         });
     },
 );
 
 Deno.test(
-    "getMediaGroupForPinned returns undefined without media_group_id",
+    "getForPinned returns undefined without media_group_id",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -200,7 +200,7 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroupForPinned();
+            const group = await ctx.mediaGroups.getForPinned();
             assertEquals(group, undefined);
         });
     },
@@ -316,7 +316,7 @@ Deno.test(
 );
 
 Deno.test(
-    "autoStore: false still hydrates getMediaGroup methods",
+    "autoStore: false still hydrates getForMsg methods",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter, { autoStore: false });
@@ -330,7 +330,7 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.mediaGroups.getMediaGroup();
+            const group = await ctx.mediaGroups.getForMsg();
             assertEquals(group?.length, 2);
         });
     },
@@ -352,14 +352,14 @@ Deno.test(
 
         await mg.middleware()(ctx, async () => {
             // Verify group exists
-            const group = await ctx.mediaGroups.getMediaGroup();
+            const group = await ctx.mediaGroups.getForMsg();
             assertEquals(group?.length, 2);
 
             // Delete it
             await ctx.mediaGroups.delete("g11");
 
             // Verify it's gone
-            const deleted = await ctx.mediaGroups.getMediaGroup();
+            const deleted = await ctx.mediaGroups.getForMsg();
             assertEquals(deleted, undefined);
         });
     },
