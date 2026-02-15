@@ -23,10 +23,15 @@ export {
  */
 export type MediaGroupsFlavor = {
     /**
-     * Gets all messages belonging to the current message's media group.
-     * Returns `undefined` if the current message is not part of a media group.
+     * Namespace of the `media-groups` plugin
      */
-    getMediaGroup: () => Promise<Message[] | undefined>;
+    mediaGroups: {
+        /**
+         * Gets all messages belonging to the current message's media group.
+         * Returns `undefined` if the current message is not part of a media group.
+         */
+        getMediaGroup: () => Promise<Message[] | undefined>;
+    };
 };
 
 type MediaGroupsContext = Context & MediaGroupsFlavor;
@@ -83,6 +88,12 @@ type MediaGroupsContext = Context & MediaGroupsFlavor;
  *     );
  *   }
  * });
+ *
+ * // Access media group of current message via namespace
+ * bot.on("message", async (ctx) => {
+ *   const group = await ctx.mediaGroups.getMediaGroup();
+ *   if (group) console.log(`Album has ${group.length} items`);
+ * });
  * ```
  */
 export function mediaGroups(
@@ -133,10 +144,12 @@ export function mediaGroups(
     composer.use(async (ctx, next) => {
         const msg = ctx.msg ?? ctx.message;
 
-        ctx.getMediaGroup = async () => {
-            const mediaGroupId = msg?.media_group_id;
-            if (!mediaGroupId) return undefined;
-            return await getMediaGroup(mediaGroupId);
+        ctx.mediaGroups = {
+            getMediaGroup: async () => {
+                const mediaGroupId = msg?.media_group_id;
+                if (!mediaGroupId) return undefined;
+                return await getMediaGroup(mediaGroupId);
+            },
         };
 
         // Collect messages to store in batch
@@ -155,6 +168,20 @@ export function mediaGroups(
 
                 Object.defineProperty(replyToMessage, "getMediaGroup", {
                     value: () => getMediaGroup(replyToMessage.media_group_id!),
+                    enumerable: false,
+                });
+            }
+        }
+
+        // Hydrate pinned_message with getMediaGroup if present
+        if (msg && "pinned_message" in msg && msg.pinned_message) {
+            const pinnedMessage = msg.pinned_message;
+
+            if (pinnedMessage.media_group_id) {
+                toStore.push(pinnedMessage);
+
+                Object.defineProperty(pinnedMessage, "getMediaGroup", {
+                    value: () => getMediaGroup(pinnedMessage.media_group_id!),
                     enumerable: false,
                 });
             }

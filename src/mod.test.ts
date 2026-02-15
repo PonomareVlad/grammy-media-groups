@@ -43,7 +43,7 @@ Deno.test("mediaGroups exposes getMediaGroup on the composer", async () => {
     assertEquals(result?.[0].message_id, 1);
 });
 
-Deno.test("middleware hydrates ctx.getMediaGroup", async () => {
+Deno.test("middleware hydrates ctx.mediaGroups.getMediaGroup", async () => {
     const adapter = new MemorySessionStorage<Message[]>();
     const mg = mediaGroups(adapter);
 
@@ -58,7 +58,7 @@ Deno.test("middleware hydrates ctx.getMediaGroup", async () => {
     let called = false;
     await mg.middleware()(ctx, async () => {
         called = true;
-        const group = await ctx.getMediaGroup();
+        const group = await ctx.mediaGroups.getMediaGroup();
         assertEquals(group?.length, 2);
     });
     assertEquals(called, true);
@@ -95,7 +95,7 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            const group = await ctx.getMediaGroup();
+            const group = await ctx.mediaGroups.getMediaGroup();
             assertEquals(group, undefined);
         });
     },
@@ -149,5 +149,79 @@ Deno.test(
             const reply = (ctx.message as any).reply_to_message;
             assertEquals(reply.getMediaGroup, undefined);
         });
+    },
+);
+
+Deno.test(
+    "middleware hydrates pinned_message with getMediaGroup",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        // Pre-populate storage with the media group
+        await adapter.write("g4", [msg(30, 400, "g4"), msg(31, 400, "g4")]);
+
+        const pinnedMsg = msg(30, 400, "g4");
+        const ctx = createCtx({
+            update_id: 1,
+            message: {
+                ...msg(40, 400),
+                pinned_message: pinnedMsg,
+            },
+        });
+
+        await mg.middleware()(ctx, async () => {
+            // deno-lint-ignore no-explicit-any
+            const pinned = (ctx.message as any).pinned_message;
+            assertEquals(typeof pinned.getMediaGroup, "function");
+            const group = await pinned.getMediaGroup();
+            assertEquals(group?.length, 2);
+        });
+    },
+);
+
+Deno.test(
+    "middleware does not hydrate pinned_message without media_group_id",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        const pinnedMsg = msg(30, 400); // no media_group_id
+        const ctx = createCtx({
+            update_id: 1,
+            message: {
+                ...msg(40, 400),
+                pinned_message: pinnedMsg,
+            },
+        });
+
+        await mg.middleware()(ctx, async () => {
+            // deno-lint-ignore no-explicit-any
+            const pinned = (ctx.message as any).pinned_message;
+            assertEquals(pinned.getMediaGroup, undefined);
+        });
+    },
+);
+
+Deno.test(
+    "middleware stores pinned_message with media_group_id",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        const pinnedMsg = msg(30, 400, "g5");
+        const ctx = createCtx({
+            update_id: 1,
+            message: {
+                ...msg(40, 400),
+                pinned_message: pinnedMsg,
+            },
+        });
+
+        await mg.middleware()(ctx, async () => {});
+
+        const stored = await adapter.read("g5");
+        assertEquals(stored?.length, 1);
+        assertEquals(stored?.[0].message_id, 30);
     },
 );

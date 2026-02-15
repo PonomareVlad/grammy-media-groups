@@ -12,10 +12,12 @@ outgoing API responses, and lets you retrieve the full group at any time.
 - **Transformer** — intercepts Telegram API responses (`sendMediaGroup`,
   `forwardMessage`, `editMessageMedia`, `editMessageCaption`,
   `editMessageReplyMarkup`) and stores returned messages.
-- **Context hydration** — adds `ctx.getMediaGroup()` to fetch the current
-  message's media group.
+- **Context hydration** — adds `ctx.mediaGroups.getMediaGroup()` to fetch the
+  current message's media group.
 - **Reply hydration** — adds `getMediaGroup()` to `reply_to_message` when it
   belongs to a media group.
+- **Pinned message hydration** — adds `getMediaGroup()` to `pinned_message`
+  when it belongs to a media group.
 - **Programmatic access** — the returned composer exposes
   `getMediaGroup(mediaGroupId)` for use outside of middleware.
 
@@ -53,7 +55,7 @@ bot.use(mg);
 
 // Retrieve the media group of the current message
 bot.on("message", async (ctx) => {
-    const group = await ctx.getMediaGroup();
+    const group = await ctx.mediaGroups.getMediaGroup();
     if (group) {
         console.log(`Media group has ${group.length} messages`);
     }
