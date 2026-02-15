@@ -35,7 +35,6 @@ npm install @grammyjs/media-groups
 // Update the URL below once the module is published on deno.land
 import {
     mediaGroups,
-    mediaGroupTransformer,
     type MediaGroupsFlavor,
 } from "https://deno.land/x/grammy_media_groups/mod.ts";
 ```
@@ -46,7 +45,6 @@ import {
 import { Bot, Context, InputMediaBuilder } from "grammy";
 import {
     mediaGroups,
-    mediaGroupTransformer,
     type MediaGroupsFlavor,
 } from "@grammyjs/media-groups";
 
@@ -59,7 +57,7 @@ const mg = mediaGroups();
 bot.use(mg);
 
 // Install transformer for outgoing API responses
-bot.api.config.use(mediaGroupTransformer(mg.adapter));
+bot.api.config.use(mg.transformer);
 
 // Retrieve the media group of the current message
 bot.on("message", async (ctx) => {

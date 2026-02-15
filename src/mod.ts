@@ -102,7 +102,6 @@ export function mediaGroupTransformer(
  * import {
  *     type MediaGroupsFlavor,
  *     mediaGroups,
- *     mediaGroupTransformer,
  * } from "@grammyjs/media-groups";
  *
  * type MyContext = Context & MediaGroupsFlavor;
@@ -114,7 +113,7 @@ export function mediaGroupTransformer(
  * bot.use(mg);
  *
  * // Install transformer for outgoing API responses
- * bot.api.config.use(mediaGroupTransformer(mg.adapter));
+ * bot.api.config.use(mg.transformer);
  *
  * // Programmatic access
  * const messages = await mg.getMediaGroup("some-media-group-id");
@@ -175,6 +174,9 @@ export function mediaGroups(
 ): Composer<MediaGroupsContext> & {
     /** The storage adapter used by the plugin. */
     adapter: StorageAdapter<Message[]>;
+    /** Pre-built API transformer. Install via `bot.api.config.use(mg.transformer)`. */
+    // deno-lint-ignore no-explicit-any
+    transformer: Transformer<any>;
     /**
      * Fetches a media group by its ID from storage.
      *
@@ -233,9 +235,12 @@ export function mediaGroups(
     // Attach standalone helpers
     const result = composer as Composer<MediaGroupsContext> & {
         adapter: StorageAdapter<Message[]>;
+        // deno-lint-ignore no-explicit-any
+        transformer: Transformer<any>;
         getMediaGroup: (mediaGroupId: string) => Promise<Message[] | undefined>;
     };
     result.adapter = adapter;
+    result.transformer = mediaGroupTransformer(adapter);
     result.getMediaGroup = getMediaGroup;
 
     return result;
