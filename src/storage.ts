@@ -136,7 +136,7 @@ export function toInputMedia(
                 : msg.caption_entities,
             show_caption_above_media: hasCaption
                 ? options.show_caption_above_media
-                : undefined,
+                : msg.show_caption_above_media,
         };
         const visual = { ...base, has_spoiler };
         switch (true) {
