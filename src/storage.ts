@@ -153,6 +153,8 @@ export function toInputMedia(
                 return InputMediaBuilder.document(msg.document!.file_id, base);
             case "audio" in msg:
                 return InputMediaBuilder.audio(msg.audio!.file_id, base);
+            default:
+                return undefined;
         }
     }).filter(Boolean) as InputMedia[];
 }
