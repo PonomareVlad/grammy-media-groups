@@ -161,7 +161,7 @@ export function mediaGroupTransformer(
  *             reply_markup: {
  *                 inline_keyboard: [[{
  *                     text: "Resend album",
- *                     callback_data: `album:${ctx.msg.media_group_id}`,
+ *                     callback_data: ctx.msg.media_group_id,
  *                 }]],
  *             },
  *         });
@@ -170,9 +170,7 @@ export function mediaGroupTransformer(
  *
  * // Handle inline keyboard button to resend a media group
  * bot.on("callback_query:data", async (ctx) => {
- *     const match = ctx.callbackQuery.data.match(/^album:(.+)$/);
- *     if (!match) return;
- *     const group = await mg.getMediaGroup(match[1]);
+ *     const group = await mg.getMediaGroup(ctx.callbackQuery.data);
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
  *             ctx.mediaGroups.toInputMedia(group),

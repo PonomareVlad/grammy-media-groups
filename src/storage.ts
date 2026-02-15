@@ -72,6 +72,10 @@ export interface ToInputMediaOptions {
     parse_mode?: ParseMode;
     /** Entities for the overridden caption (used instead of `parse_mode`). */
     caption_entities?: MessageEntity[];
+    /** Show caption above the media (applies to photo and video items). */
+    show_caption_above_media?: boolean;
+    /** Mark media as containing a spoiler (applies to photo and video items). */
+    has_spoiler?: boolean;
 }
 
 /**
@@ -110,6 +114,7 @@ export function toInputMedia(
     messages: Message[],
     options: ToInputMediaOptions = {},
 ): InputMedia[] {
+    const { show_caption_above_media, has_spoiler } = options;
     return messages.flatMap((msg, i) => {
         const overrideCaption = options.caption !== undefined && i === 0;
         const base = {
@@ -119,13 +124,17 @@ export function toInputMedia(
                 ? options.caption_entities
                 : msg.caption_entities,
         };
+        const visual = { ...base, show_caption_above_media, has_spoiler };
         switch (true) {
             case "photo" in msg && !!msg.photo:
-                return InputMediaBuilder.photo(msg.photo.at(-1)!.file_id, base);
+                return InputMediaBuilder.photo(
+                    msg.photo.at(-1)!.file_id,
+                    visual,
+                );
             case "video" in msg && !!msg.video:
-                return InputMediaBuilder.video(msg.video.file_id, base);
+                return InputMediaBuilder.video(msg.video.file_id, visual);
             case "animation" in msg && !!msg.animation:
-                return InputMediaBuilder.video(msg.animation.file_id, base);
+                return InputMediaBuilder.video(msg.animation.file_id, visual);
             case "document" in msg && !!msg.document:
                 return InputMediaBuilder.document(msg.document.file_id, base);
             case "audio" in msg && !!msg.audio:
