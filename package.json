@@ -1,5 +1,5 @@
 {
-    "name": "@grammyjs/media-groups",
+    "name": "grammy-media-groups",
     "version": "0.0.0",
     "description": "Media Groups Storage Plugin for grammY",
     "homepage": "https://github.com/PonomareVlad/grammy-media-groups",
