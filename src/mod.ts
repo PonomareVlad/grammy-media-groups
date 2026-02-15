@@ -196,29 +196,48 @@ export function mediaGroups(
 
     // Hydrate context and store incoming messages
     composer.use(async (ctx, next) => {
-        const msg = ctx.msg ?? ctx.message;
-
         // Resolve a media_group_id from a nested message
         const getGroupFor = (nested: Message | undefined) => {
             const id = nested?.media_group_id;
             return id ? getMediaGroup(id) : Promise.resolve(undefined);
         };
 
-        const replyMsg =
-            msg && "reply_to_message" in msg
-                ? msg.reply_to_message
-                : undefined;
-        const pinnedMsg =
-            msg && "pinned_message" in msg ? msg.pinned_message : undefined;
-
+        // Read msg, replyMsg, pinnedMsg lazily at call time
         ctx.mediaGroups = {
-            getMediaGroup: () => getGroupFor(msg),
-            getMediaGroupForReply: () => getGroupFor(replyMsg),
-            getMediaGroupForPinned: () => getGroupFor(pinnedMsg),
+            getMediaGroup: () => {
+                const msg = ctx.msg ?? ctx.message;
+                return getGroupFor(msg);
+            },
+            getMediaGroupForReply: () => {
+                const msg = ctx.msg ?? ctx.message;
+                const reply =
+                    msg && "reply_to_message" in msg
+                        ? msg.reply_to_message
+                        : undefined;
+                return getGroupFor(reply);
+            },
+            getMediaGroupForPinned: () => {
+                const msg = ctx.msg ?? ctx.message;
+                const pinned =
+                    msg && "pinned_message" in msg
+                        ? msg.pinned_message
+                        : undefined;
+                return getGroupFor(pinned);
+            },
             store,
         };
 
         if (autoStore) {
+            const msg = ctx.msg ?? ctx.message;
+            const replyMsg =
+                msg && "reply_to_message" in msg
+                    ? msg.reply_to_message
+                    : undefined;
+            const pinnedMsg =
+                msg && "pinned_message" in msg
+                    ? msg.pinned_message
+                    : undefined;
+
             // Collect messages to store in batch
             const toStore: Message[] = [];
             if (msg?.media_group_id) toStore.push(msg);
