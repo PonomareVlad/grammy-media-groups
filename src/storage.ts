@@ -1,5 +1,13 @@
 import type { Message, StorageAdapter } from "./deps.deno.ts";
 
+/** Wraps a single Message in an array. */
+const toArray = (result: Message): Message[] => [result];
+
+/** Returns a Message in an array if it's an object, or empty if `true` (inline edit). */
+// deno-lint-ignore no-explicit-any
+const toArrayIfObject = (result: any): Message[] =>
+    result !== null && typeof result === "object" ? [result] : [];
+
 /**
  * Static mapping of API methods to their result extraction logic.
  * Keys are method names whose responses may contain messages with `media_group_id`.
@@ -7,19 +15,11 @@ import type { Message, StorageAdapter } from "./deps.deno.ts";
  */
 // deno-lint-ignore no-explicit-any
 export const MEDIA_GROUP_METHODS: Record<string, (result: any) => Message[]> = {
-    /** Returns `Message[]` */
     sendMediaGroup: (result) => (Array.isArray(result) ? result : []),
-    /** Returns `Message` */
-    forwardMessage: (result) => [result],
-    /** Returns `Message | true` */
-    editMessageMedia: (result) =>
-        result !== null && typeof result === "object" ? [result] : [],
-    /** Returns `Message | true` */
-    editMessageCaption: (result) =>
-        result !== null && typeof result === "object" ? [result] : [],
-    /** Returns `Message | true` */
-    editMessageReplyMarkup: (result) =>
-        result !== null && typeof result === "object" ? [result] : [],
+    forwardMessage: toArray,
+    editMessageMedia: toArrayIfObject,
+    editMessageCaption: toArrayIfObject,
+    editMessageReplyMarkup: toArrayIfObject,
 };
 
 /**
@@ -33,32 +33,24 @@ export async function storeMessages(
     messages: Message[],
 ): Promise<void> {
     const groups: Record<string, Message[]> = {};
+
     for (const message of messages) {
         const { media_group_id } = message;
         if (!media_group_id) continue;
-        const group =
-            (groups[media_group_id] ??= (await adapter.read(media_group_id)) ??
-                []);
+
+        const group = (groups[media_group_id] ??=
+            (await adapter.read(media_group_id)) ?? []);
+
         const index = group.findIndex(
             (m) =>
                 m.message_id === message.message_id &&
                 m.chat.id === message.chat.id,
         );
+
         group[index >= 0 ? index : group.length] = message;
     }
+
     await Promise.all(
         Object.entries(groups).map(([key, value]) => adapter.write(key, value)),
     );
-}
-
-/**
- * Extracts messages from an API response result using the static method map.
- */
-export function extractMessages(
-    method: string,
-    // deno-lint-ignore no-explicit-any
-    result: any,
-): Message[] {
-    const extractor = MEDIA_GROUP_METHODS[method];
-    return extractor ? extractor(result) : [];
 }

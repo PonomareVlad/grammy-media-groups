@@ -14,10 +14,8 @@ outgoing API responses, and lets you retrieve the full group at any time.
   `editMessageReplyMarkup`) and stores returned messages.
 - **Context hydration** — adds `ctx.mediaGroups.getMediaGroup()` to fetch the
   current message's media group.
-- **Reply hydration** — adds `getMediaGroup()` to `reply_to_message` when it
-  belongs to a media group.
-- **Pinned message hydration** — adds `getMediaGroup()` to `pinned_message`
-  when it belongs to a media group.
+- **Reply/pinned helpers** — `ctx.mediaGroups.getMediaGroupForReply()` and
+  `ctx.mediaGroups.getMediaGroupForPinned()` for sub-messages.
 - **Programmatic access** — the returned composer exposes
   `getMediaGroup(mediaGroupId)` for use outside of middleware.
 
@@ -35,6 +33,7 @@ npm install @grammyjs/media-groups
 // Update the URL below once the module is published on deno.land
 import {
     mediaGroups,
+    mediaGroupTransformer,
     type MediaGroupsFlavor,
 } from "https://deno.land/x/grammy_media_groups/mod.ts";
 ```
@@ -43,7 +42,11 @@ import {
 
 ```typescript
 import { Bot, Context, InputMediaBuilder } from "grammy";
-import { mediaGroups, type MediaGroupsFlavor } from "@grammyjs/media-groups";
+import {
+    mediaGroups,
+    mediaGroupTransformer,
+    type MediaGroupsFlavor,
+} from "@grammyjs/media-groups";
 
 type MyContext = Context & MediaGroupsFlavor;
 
@@ -52,6 +55,9 @@ const bot = new Bot<MyContext>("<your-bot-token>");
 // Uses MemorySessionStorage by default — pass a custom adapter for persistence
 const mg = mediaGroups();
 bot.use(mg);
+
+// Install transformer for outgoing API responses
+bot.api.config.use(mediaGroupTransformer(mg.adapter));
 
 // Retrieve the media group of the current message
 bot.on("message", async (ctx) => {
@@ -63,7 +69,7 @@ bot.on("message", async (ctx) => {
 
 // Reply to an album message with /album to resend the full media group
 bot.command("album", async (ctx) => {
-    const group = await ctx.msg?.reply_to_message?.getMediaGroup?.();
+    const group = await ctx.mediaGroups.getMediaGroupForReply();
     if (group) {
         await ctx.replyWithMediaGroup(
             group

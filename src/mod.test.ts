@@ -1,6 +1,11 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import type { Message } from "./deps.deno.ts";
-import { Api, Context, MemorySessionStorage, type UserFromGetMe, } from "./deps.deno.ts";
+import {
+    Api,
+    Context,
+    MemorySessionStorage,
+    type UserFromGetMe,
+} from "./deps.deno.ts";
 import { mediaGroups, type MediaGroupsFlavor } from "./mod.ts";
 
 /** Creates a minimal Message-like object for testing. */
@@ -41,6 +46,12 @@ Deno.test("mediaGroups exposes getMediaGroup on the composer", async () => {
     const result = await mg.getMediaGroup("g1");
     assertEquals(result?.length, 1);
     assertEquals(result?.[0].message_id, 1);
+});
+
+Deno.test("mediaGroups exposes adapter on the composer", () => {
+    const adapter = new MemorySessionStorage<Message[]>();
+    const mg = mediaGroups(adapter);
+    assertEquals(mg.adapter, adapter);
 });
 
 Deno.test("middleware hydrates ctx.mediaGroups.getMediaGroup", async () => {
@@ -102,7 +113,7 @@ Deno.test(
 );
 
 Deno.test(
-    "middleware hydrates reply_to_message with getMediaGroup",
+    "middleware provides getMediaGroupForReply for reply_to_message",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -120,17 +131,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            // deno-lint-ignore no-explicit-any
-            const reply = (ctx.message as any).reply_to_message;
-            assertEquals(typeof reply.getMediaGroup, "function");
-            const group = await reply.getMediaGroup();
+            const group = await ctx.mediaGroups.getMediaGroupForReply();
             assertEquals(group?.length, 2);
         });
     },
 );
 
 Deno.test(
-    "middleware does not hydrate reply_to_message without media_group_id",
+    "getMediaGroupForReply returns undefined without media_group_id",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -145,15 +153,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            // deno-lint-ignore no-explicit-any
-            const reply = (ctx.message as any).reply_to_message;
-            assertEquals(reply.getMediaGroup, undefined);
+            const group = await ctx.mediaGroups.getMediaGroupForReply();
+            assertEquals(group, undefined);
         });
     },
 );
 
 Deno.test(
-    "middleware hydrates pinned_message with getMediaGroup",
+    "middleware provides getMediaGroupForPinned for pinned_message",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -171,17 +178,14 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            // deno-lint-ignore no-explicit-any
-            const pinned = (ctx.message as any).pinned_message;
-            assertEquals(typeof pinned.getMediaGroup, "function");
-            const group = await pinned.getMediaGroup();
+            const group = await ctx.mediaGroups.getMediaGroupForPinned();
             assertEquals(group?.length, 2);
         });
     },
 );
 
 Deno.test(
-    "middleware does not hydrate pinned_message without media_group_id",
+    "getMediaGroupForPinned returns undefined without media_group_id",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -196,9 +200,8 @@ Deno.test(
         });
 
         await mg.middleware()(ctx, async () => {
-            // deno-lint-ignore no-explicit-any
-            const pinned = (ctx.message as any).pinned_message;
-            assertEquals(pinned.getMediaGroup, undefined);
+            const group = await ctx.mediaGroups.getMediaGroupForPinned();
+            assertEquals(group, undefined);
         });
     },
 );
@@ -223,5 +226,28 @@ Deno.test(
         const stored = await adapter.read("g5");
         assertEquals(stored?.length, 1);
         assertEquals(stored?.[0].message_id, 30);
+    },
+);
+
+Deno.test(
+    "middleware stores reply_to_message with media_group_id",
+    async () => {
+        const adapter = new MemorySessionStorage<Message[]>();
+        const mg = mediaGroups(adapter);
+
+        const replyMsg = msg(10, 300, "g6");
+        const ctx = createCtx({
+            update_id: 1,
+            message: {
+                ...msg(20, 300),
+                reply_to_message: replyMsg,
+            },
+        });
+
+        await mg.middleware()(ctx, async () => {});
+
+        const stored = await adapter.read("g6");
+        assertEquals(stored?.length, 1);
+        assertEquals(stored?.[0].message_id, 10);
     },
 );

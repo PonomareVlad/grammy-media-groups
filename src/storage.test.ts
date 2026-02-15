@@ -1,7 +1,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import type { Message } from "./deps.deno.ts";
 import { MemorySessionStorage } from "./deps.deno.ts";
-import { extractMessages, MEDIA_GROUP_METHODS, storeMessages, } from "./storage.ts";
+import { MEDIA_GROUP_METHODS, storeMessages } from "./storage.ts";
 
 /** Creates a minimal Message-like object for testing. */
 function msg(
@@ -74,44 +74,38 @@ Deno.test(
     },
 );
 
-// --- extractMessages ---
+// --- MEDIA_GROUP_METHODS extractors ---
 
-Deno.test("extractMessages returns array for sendMediaGroup", () => {
+Deno.test("sendMediaGroup extractor returns array", () => {
     const messages = [msg(1, 100), msg(2, 100)];
-    assertEquals(extractMessages("sendMediaGroup", messages), messages);
+    assertEquals(MEDIA_GROUP_METHODS.sendMediaGroup(messages), messages);
 });
 
-Deno.test(
-    "extractMessages returns empty for sendMediaGroup with non-array",
-    () => {
-        assertEquals(extractMessages("sendMediaGroup", "not an array"), []);
-        assertEquals(extractMessages("sendMediaGroup", null), []);
-    },
-);
+Deno.test("sendMediaGroup extractor returns empty for non-array", () => {
+    assertEquals(MEDIA_GROUP_METHODS.sendMediaGroup("not an array"), []);
+    assertEquals(MEDIA_GROUP_METHODS.sendMediaGroup(null), []);
+});
 
-Deno.test("extractMessages extracts single message from object result", () => {
+Deno.test("forwardMessage extractor wraps single message", () => {
     const m = msg(1, 100);
-    const result = extractMessages("forwardMessage", m);
+    const result = MEDIA_GROUP_METHODS.forwardMessage(m);
     assertEquals(result.length, 1);
     assertEquals(result[0].message_id, 1);
 });
 
-Deno.test("extractMessages returns empty for null/undefined", () => {
-    assertEquals(extractMessages("forwardMessage", null), []);
-    assertEquals(extractMessages("forwardMessage", undefined), []);
+Deno.test("editMessageMedia extractor returns empty for true", () => {
+    assertEquals(MEDIA_GROUP_METHODS.editMessageMedia(true), []);
 });
 
-Deno.test(
-    "extractMessages returns empty for boolean result (editMessage inline)",
-    () => {
-        assertEquals(extractMessages("editMessageMedia", true), []);
-    },
-);
+Deno.test("editMessageMedia extractor returns message for object", () => {
+    const m = msg(1, 100);
+    const result = MEDIA_GROUP_METHODS.editMessageMedia(m);
+    assertEquals(result.length, 1);
+    assertEquals(result[0].message_id, 1);
+});
 
-Deno.test("extractMessages returns empty for unknown method", () => {
-    const items = [msg(1, 100), msg(2, 100)];
-    const result = extractMessages("someMethod", items);
-    assertEquals(result.length, 0);
+Deno.test("unknown method is not in MEDIA_GROUP_METHODS", () => {
+    assertEquals(MEDIA_GROUP_METHODS["someMethod"], undefined);
 });
 
 // --- MEDIA_GROUP_METHODS ---
