@@ -123,7 +123,7 @@ export function mediaGroups(
         signal,
     ) => {
         const res = await prev(method, payload, signal);
-        if (res.ok && MEDIA_GROUP_METHODS.includes(method)) {
+        if (res.ok && method in MEDIA_GROUP_METHODS) {
             const messages = extractMessages(method, res.result);
             await storeMessages(adapter, messages);
         }

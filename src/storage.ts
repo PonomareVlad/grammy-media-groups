@@ -1,15 +1,26 @@
 import type { Message, StorageAdapter } from "./deps.deno.ts";
 
 /**
- * API methods whose responses may contain messages with `media_group_id`.
+ * Static mapping of API methods to their result extraction logic.
+ * Keys are method names whose responses may contain messages with `media_group_id`.
+ * Values are functions that extract `Message[]` from the raw API result.
  */
-export const MEDIA_GROUP_METHODS: string[] = [
-    "sendMediaGroup",
-    "forwardMessage",
-    "editMessageMedia",
-    "editMessageCaption",
-    "editMessageReplyMarkup",
-];
+// deno-lint-ignore no-explicit-any
+export const MEDIA_GROUP_METHODS: Record<string, (result: any) => Message[]> = {
+    /** Returns `Message[]` */
+    sendMediaGroup: (result) => (Array.isArray(result) ? result : []),
+    /** Returns `Message` */
+    forwardMessage: (result) => [result],
+    /** Returns `Message | true` */
+    editMessageMedia: (result) =>
+        typeof result === "object" ? [result] : [],
+    /** Returns `Message | true` */
+    editMessageCaption: (result) =>
+        typeof result === "object" ? [result] : [],
+    /** Returns `Message | true` */
+    editMessageReplyMarkup: (result) =>
+        typeof result === "object" ? [result] : [],
+};
 
 /**
  * Stores messages in batch, grouped by `media_group_id`.
@@ -41,33 +52,13 @@ export async function storeMessages(
 }
 
 /**
- * Extracts messages from an API response result.
+ * Extracts messages from an API response result using the static method map.
  */
 export function extractMessages(
     method: string,
     // deno-lint-ignore no-explicit-any
     result: any,
 ): Message[] {
-    if (method === "sendMediaGroup") {
-        return Array.isArray(result) ? result : [];
-    }
-
-    if (Array.isArray(result)) {
-        return result.filter(
-            (item): item is Message =>
-                item != null &&
-                typeof item === "object" &&
-                "message_id" in item,
-        );
-    }
-
-    if (
-        result != null &&
-        typeof result === "object" &&
-        "message_id" in result
-    ) {
-        return [result as Message];
-    }
-
-    return [];
+    const extractor = MEDIA_GROUP_METHODS[method];
+    return extractor ? extractor(result) : [];
 }

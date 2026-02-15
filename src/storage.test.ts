@@ -108,12 +108,10 @@ Deno.test(
     },
 );
 
-Deno.test("extractMessages filters valid messages from array", () => {
-    const items = [msg(1, 100), null, { not_a_message: true }, msg(2, 100)];
+Deno.test("extractMessages returns empty for unknown method", () => {
+    const items = [msg(1, 100), msg(2, 100)];
     const result = extractMessages("someMethod", items);
-    assertEquals(result.length, 2);
-    assertEquals(result[0].message_id, 1);
-    assertEquals(result[1].message_id, 2);
+    assertEquals(result.length, 0);
 });
 
 // --- MEDIA_GROUP_METHODS ---
@@ -126,7 +124,7 @@ Deno.test("MEDIA_GROUP_METHODS contains expected methods", () => {
         "editMessageCaption",
         "editMessageReplyMarkup",
     ];
-    assertEquals(MEDIA_GROUP_METHODS, expected);
+    assertEquals(Object.keys(MEDIA_GROUP_METHODS), expected);
 });
 
 // --- storeMessages (batch) ---
