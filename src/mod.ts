@@ -159,32 +159,21 @@ export function mediaGroups(
             toStore.push(msg);
         }
 
-        // Hydrate reply_to_message with getMediaGroup if present
-        if (msg && "reply_to_message" in msg && msg.reply_to_message) {
-            const replyToMessage = msg.reply_to_message;
+        // Hydrate a nested message with getMediaGroup and collect for storage
+        const hydrateMessage = (nested: Message | undefined) => {
+            if (!nested?.media_group_id) return;
+            toStore.push(nested);
+            Object.defineProperty(nested, "getMediaGroup", {
+                value: () => getMediaGroup(nested.media_group_id!),
+                enumerable: false,
+            });
+        };
 
-            if (replyToMessage.media_group_id) {
-                toStore.push(replyToMessage);
-
-                Object.defineProperty(replyToMessage, "getMediaGroup", {
-                    value: () => getMediaGroup(replyToMessage.media_group_id!),
-                    enumerable: false,
-                });
-            }
+        if (msg && "reply_to_message" in msg) {
+            hydrateMessage(msg.reply_to_message);
         }
-
-        // Hydrate pinned_message with getMediaGroup if present
-        if (msg && "pinned_message" in msg && msg.pinned_message) {
-            const pinnedMessage = msg.pinned_message;
-
-            if (pinnedMessage.media_group_id) {
-                toStore.push(pinnedMessage);
-
-                Object.defineProperty(pinnedMessage, "getMediaGroup", {
-                    value: () => getMediaGroup(pinnedMessage.media_group_id!),
-                    enumerable: false,
-                });
-            }
+        if (msg && "pinned_message" in msg) {
+            hydrateMessage(msg.pinned_message);
         }
 
         if (toStore.length > 0) {
