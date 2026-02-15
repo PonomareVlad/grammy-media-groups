@@ -4,7 +4,8 @@
     "description": "Media Groups Storage Plugin for grammY",
     "homepage": "https://github.com/PonomareVlad/grammy-media-groups",
     "main": "./out/mod.js",
-    "type": "commonjs",
+    "types": "./out/mod.d.ts",
+    "type": "module",
     "scripts": {
         "prepare": "npm run build",
         "build": "deno2node tsconfig.json"
@@ -14,7 +15,10 @@
         "url": "git+https://github.com/PonomareVlad/grammy-media-groups.git"
     },
     "exports": {
-        ".": "./out/mod.js"
+        ".": {
+            "types": "./out/mod.d.ts",
+            "default": "./out/mod.js"
+        }
     },
     "files": [
         "out/"
