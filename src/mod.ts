@@ -6,18 +6,14 @@ import {
     type StorageAdapter,
     type Transformer,
 } from "./deps.deno.ts";
-import {
-    copyMediaGroup,
-    MEDIA_GROUP_METHODS,
-    storeMessages,
-} from "./storage.ts";
-import type { CopyMediaGroupOptions } from "./storage.ts";
+import { MEDIA_GROUP_METHODS, storeMessages, toInputMedia } from "./storage.ts";
+import type { ToInputMediaOptions } from "./storage.ts";
 
 export {
-    copyMediaGroup,
-    type CopyMediaGroupOptions,
     MEDIA_GROUP_METHODS,
     storeMessages,
+    toInputMedia,
+    type ToInputMediaOptions,
 } from "./storage.ts";
 
 /**
@@ -80,9 +76,9 @@ export type MediaGroupsFlavor = {
          * @param options Optional caption/parse_mode/caption_entities override applied to the first item
          * @returns An array of `InputMedia` objects ready to be sent
          */
-        copyMediaGroup: (
+        toInputMedia: (
             messages: Message[],
-            options?: CopyMediaGroupOptions,
+            options?: ToInputMediaOptions,
         ) => InputMedia[];
     };
 };
@@ -152,7 +148,7 @@ export function mediaGroupTransformer(
  *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
- *             ctx.mediaGroups.copyMediaGroup(group),
+ *             ctx.mediaGroups.toInputMedia(group),
  *         );
  *     }
  * });
@@ -162,7 +158,7 @@ export function mediaGroupTransformer(
  *     const group = await ctx.mediaGroups.getForReply();
  *     if (group) {
  *         await ctx.replyWithMediaGroup(
- *             ctx.mediaGroups.copyMediaGroup(group, {
+ *             ctx.mediaGroups.toInputMedia(group, {
  *                 caption: "<b>Forwarded album</b>",
  *                 parse_mode: "HTML",
  *             }),
@@ -253,7 +249,7 @@ export function mediaGroups(
             getForPinned: () => getGroupFor(ctx.msg?.pinned_message),
             store,
             delete: deleteMediaGroup,
-            copyMediaGroup,
+            toInputMedia,
         };
 
         if (autoStore) {

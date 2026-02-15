@@ -1,11 +1,7 @@
 import { assertEquals } from "@std/assert";
 import type { Message } from "./deps.deno.ts";
 import { MemorySessionStorage } from "./deps.deno.ts";
-import {
-    copyMediaGroup,
-    MEDIA_GROUP_METHODS,
-    storeMessages,
-} from "./storage.ts";
+import { MEDIA_GROUP_METHODS, storeMessages, toInputMedia } from "./storage.ts";
 
 /** Creates a minimal Message-like object for testing. */
 function msg(
@@ -169,9 +165,9 @@ Deno.test("storeMessages handles empty array", async () => {
     assertEquals(await adapter.read("g1"), undefined);
 });
 
-// --- copyMediaGroup ---
+// --- toInputMedia ---
 
-Deno.test("copyMediaGroup converts photo messages", () => {
+Deno.test("toInputMedia converts photo messages", () => {
     const messages = [
         msg(1, 100, "g1", {
             photo: [{
@@ -188,14 +184,14 @@ Deno.test("copyMediaGroup converts photo messages", () => {
             caption: "My photo",
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 1);
     assertEquals(result[0].type, "photo");
     assertEquals(result[0].media, "large");
     assertEquals(result[0].caption, "My photo");
 });
 
-Deno.test("copyMediaGroup converts video messages", () => {
+Deno.test("toInputMedia converts video messages", () => {
     const messages = [
         msg(1, 100, "g1", {
             video: {
@@ -207,37 +203,37 @@ Deno.test("copyMediaGroup converts video messages", () => {
             },
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 1);
     assertEquals(result[0].type, "video");
     assertEquals(result[0].media, "vid1");
 });
 
-Deno.test("copyMediaGroup converts document messages", () => {
+Deno.test("toInputMedia converts document messages", () => {
     const messages = [
         msg(1, 100, "g1", {
             document: { file_id: "doc1", file_unique_id: "d1" },
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 1);
     assertEquals(result[0].type, "document");
     assertEquals(result[0].media, "doc1");
 });
 
-Deno.test("copyMediaGroup converts audio messages", () => {
+Deno.test("toInputMedia converts audio messages", () => {
     const messages = [
         msg(1, 100, "g1", {
             audio: { file_id: "aud1", file_unique_id: "a1", duration: 120 },
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 1);
     assertEquals(result[0].type, "audio");
     assertEquals(result[0].media, "aud1");
 });
 
-Deno.test("copyMediaGroup converts animation messages as video", () => {
+Deno.test("toInputMedia converts animation messages as video", () => {
     const messages = [
         msg(1, 100, "g1", {
             animation: {
@@ -249,13 +245,13 @@ Deno.test("copyMediaGroup converts animation messages as video", () => {
             },
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 1);
     assertEquals(result[0].type, "video");
     assertEquals(result[0].media, "anim1");
 });
 
-Deno.test("copyMediaGroup handles mixed media types", () => {
+Deno.test("toInputMedia handles mixed media types", () => {
     const messages = [
         msg(1, 100, "g1", {
             photo: [{
@@ -275,13 +271,13 @@ Deno.test("copyMediaGroup handles mixed media types", () => {
             },
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result.length, 2);
     assertEquals(result[0].type, "photo");
     assertEquals(result[1].type, "video");
 });
 
-Deno.test("copyMediaGroup overrides caption on first item", () => {
+Deno.test("toInputMedia overrides caption on first item", () => {
     const messages = [
         msg(1, 100, "g1", {
             photo: [{
@@ -303,7 +299,7 @@ Deno.test("copyMediaGroup overrides caption on first item", () => {
         }),
     ];
     const entities = [{ type: "bold" as const, offset: 0, length: 3 }];
-    const result = copyMediaGroup(messages, {
+    const result = toInputMedia(messages, {
         caption: "New caption",
         parse_mode: "HTML",
         caption_entities: entities,
@@ -315,7 +311,7 @@ Deno.test("copyMediaGroup overrides caption on first item", () => {
     assertEquals(result[1].parse_mode, undefined);
 });
 
-Deno.test("copyMediaGroup preserves caption_entities without override", () => {
+Deno.test("toInputMedia preserves caption_entities without override", () => {
     const entities = [{ type: "bold" as const, offset: 0, length: 5 }];
     const messages = [
         msg(1, 100, "g1", {
@@ -329,18 +325,18 @@ Deno.test("copyMediaGroup preserves caption_entities without override", () => {
             caption_entities: entities,
         }),
     ];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result[0].caption, "Hello");
     assertEquals(result[0].caption_entities, entities);
 });
 
-Deno.test("copyMediaGroup returns empty array for empty input", () => {
-    const result = copyMediaGroup([]);
+Deno.test("toInputMedia returns empty array for empty input", () => {
+    const result = toInputMedia([]);
     assertEquals(result, []);
 });
 
-Deno.test("copyMediaGroup skips unsupported message types", () => {
+Deno.test("toInputMedia skips unsupported message types", () => {
     const messages = [msg(1, 100, "g1", { text: "just text" })];
-    const result = copyMediaGroup(messages);
+    const result = toInputMedia(messages);
     assertEquals(result, []);
 });

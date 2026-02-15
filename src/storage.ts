@@ -63,9 +63,9 @@ export async function storeMessages(
 }
 
 /**
- * Options for {@link copyMediaGroup}.
+ * Options for {@link toInputMedia}.
  */
-export interface CopyMediaGroupOptions {
+export interface ToInputMediaOptions {
     /** Override caption on the first item of the media group. */
     caption?: string;
     /** Text formatting mode for the overridden caption. */
@@ -90,7 +90,7 @@ export interface CopyMediaGroupOptions {
  * ```typescript
  * const group = await ctx.mediaGroups.getForReply();
  * if (group) {
- *     await ctx.replyWithMediaGroup(copyMediaGroup(group));
+ *     await ctx.replyWithMediaGroup(toInputMedia(group));
  * }
  * ```
  *
@@ -98,7 +98,7 @@ export interface CopyMediaGroupOptions {
  * ```typescript
  * const group = await ctx.mediaGroups.getForReply();
  * if (group) {
- *     const media = copyMediaGroup(group, {
+ *     const media = toInputMedia(group, {
  *         caption: "<b>Forwarded album</b>",
  *         parse_mode: "HTML",
  *     });
@@ -106,9 +106,9 @@ export interface CopyMediaGroupOptions {
  * }
  * ```
  */
-export function copyMediaGroup(
+export function toInputMedia(
     messages: Message[],
-    options: CopyMediaGroupOptions = {},
+    options: ToInputMediaOptions = {},
 ): InputMedia[] {
     return messages.flatMap((msg, i) => {
         const overrideCaption = options.caption !== undefined && i === 0;

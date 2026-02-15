@@ -388,7 +388,7 @@ Deno.test(
 );
 
 Deno.test(
-    "ctx.mediaGroups.copyMediaGroup is available and works",
+    "ctx.mediaGroups.toInputMedia is available and works",
     async () => {
         const adapter = new MemorySessionStorage<Message[]>();
         const mg = mediaGroups(adapter);
@@ -414,7 +414,7 @@ Deno.test(
         await mg.middleware()(ctx, async () => {
             const group = await ctx.mediaGroups.getForMsg();
             assertEquals(group?.length, 1);
-            const media = ctx.mediaGroups.copyMediaGroup(group!);
+            const media = ctx.mediaGroups.toInputMedia(group!);
             assertEquals(media.length, 1);
             assertEquals(media[0].type, "photo");
             assertEquals(media[0].media, "ph1");
