@@ -32,7 +32,7 @@ outgoing API responses, and lets you retrieve the full group at any time.
 ### Node.js
 
 ```bash
-npm install github:PonomareVlad/grammy-media-groups
+npm install grammy-media-groups
 ```
 
 ### Deno
@@ -42,7 +42,7 @@ import {
     mediaGroups,
     type MediaGroupsFlavor,
     toInputMedia,
-} from "https://raw.githubusercontent.com/PonomareVlad/grammy-media-groups/main/src/mod.ts";
+} from "npm:grammy-media-groups";
 ```
 
 ## Usage
