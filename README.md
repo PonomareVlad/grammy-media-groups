@@ -73,16 +73,6 @@ bot.on("message", async (ctx) => {
     }
 });
 
-// Reply to an album message with /copy to resend the full media group
-bot.command("copy", async (ctx) => {
-    const group = await ctx.mediaGroups.getForReply();
-    if (group) {
-        await ctx.replyWithMediaGroup(
-            ctx.mediaGroups.toInputMedia(group),
-        );
-    }
-});
-
 // Handle inline keyboard button to resend a media group
 bot.callbackQuery("copy", async (ctx) => {
     const group = await ctx.mediaGroups.getForReply();
@@ -92,6 +82,16 @@ bot.callbackQuery("copy", async (ctx) => {
         );
     }
     await ctx.answerCallbackQuery();
+});
+
+// Reply to an album message with /copy to resend the full media group
+bot.command("copy", async (ctx) => {
+    const group = await ctx.mediaGroups.getForReply();
+    if (group) {
+        await ctx.replyWithMediaGroup(
+            ctx.mediaGroups.toInputMedia(group),
+        );
+    }
 });
 
 // Programmatic access outside middleware
